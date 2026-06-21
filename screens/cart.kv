@@ -1,0 +1,105 @@
+<CartScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 15
+
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 10
+
+            Button:
+                text: "<"
+                size_hint_x: None
+                width: 50
+                on_press: app.go_back_to_menu()
+
+            Spinner:
+                id: address_spinner
+                text: "Select Address"
+                values: []
+                on_text: app.on_address_selected(self.text)
+
+            Button:
+                id: balance_btn
+                text: "Balance: --€"
+                size_hint_x: None
+                width: 125
+                on_press: app.show_wallet()
+
+        RecycleView:
+            id: rv
+            viewclass: 'CartItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(90)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+                orientation: 'vertical'
+
+        Label:
+            id: error_label
+            text: ""
+            color: (0.9, 0.2, 0.2, 1)
+            font_size: 16
+            bold: True
+            size_hint_y: None
+            height: self.texture_size[1] if self.text else 0
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(55)
+            spacing: 15
+
+            Button:
+                text: "Clear Cart"
+                font_size: 20
+                bold: True
+                color: (1, 1, 1, 1)
+                background_normal: ''
+                background_color: (0.8, 0.2, 0.2, 1)
+                canvas.before:
+                    Color:
+                        rgba: (0.8, 0.2, 0.2, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15]
+                on_press: app.clear_cart()
+
+            Button:
+                text: root.checkout_text
+                font_size: 20
+                bold: True
+                color: (1, 1, 1, 1)
+                background_normal: ''
+                background_color: (0.1, 0.7, 0.3, 1)
+                canvas.before:
+                    Color:
+                        rgba: (0.1, 0.7, 0.3, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15]
+                on_press: app.on_checkout()
+
+
+<CartItem@Button>:
+    text: root.text
+    size_hint_y: None
+    height: dp(90)
+    background_normal: ''
+    background_color: (1, 1, 1, 1)
+    color: (0, 0, 0, 1)
+    font_size: 18
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15]
+    on_press: app.on_food_press(self.id)

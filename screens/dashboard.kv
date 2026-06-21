@@ -1,0 +1,93 @@
+<DashboardScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 15
+
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 10
+
+            Button:
+                text: "<"
+                size_hint_x: None
+                width: 50
+                on_press: app.logout()
+
+            Label:
+                text: "Discover"
+                font_size: 22
+                bold: True
+
+            Button:
+                text: "Orders"
+                size_hint_x: None
+                width: 75
+                on_press: app.open_orders_screen()
+
+            Button:
+                text: "+ Address"
+                size_hint_x: None
+                width: 100
+                on_press: app.open_address_screen()
+
+            Button:
+                id: balance_btn
+                text: "Balance"
+                size_hint_x: None
+                width: 110
+                on_press: app.show_wallet()
+
+            Button:
+                text: "Logout"
+                size_hint_x: None
+                width: 70
+                color: (1, 1, 1, 1)
+                
+                background_normal: ''
+                background_color: (0.85, 0.2, 0.2, 1)
+                
+                canvas.before:
+                    Color:
+                        rgba: (0.85, 0.2, 0.2, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15]
+                        
+                on_press: app.logout()
+
+        RecycleView:
+            id: rv
+            viewclass: 'DashboardItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(90)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+                orientation: 'vertical'
+
+
+<DashboardItem@Button>:
+    text: root.text
+    size_hint_y: None
+    height: dp(90)
+
+    background_normal: ''
+    background_color: (1, 1, 1, 1)
+
+    color: (0, 0, 0, 1)
+    font_size: 18
+
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15]
+
+    on_press: app.on_restaurant_press(self.id)

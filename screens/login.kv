@@ -1,0 +1,56 @@
+<LoginScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 30
+        spacing: 20
+
+        Widget:
+
+        Label:
+            text: "Food Delivery"
+            font_size: 32
+            bold: True
+            size_hint_y: None
+            height: 50
+
+        Label:
+            text: "Login to continue"
+            font_size: 16
+            color: (0.5, 0.5, 0.5, 1)
+            size_hint_y: None
+            height: 30
+
+        GridLayout:
+            cols: 1
+            spacing: 10
+            size_hint_y: None
+            height: self.minimum_height
+
+            TextInput:
+                id: username_input
+                hint_text: "Username or Email"
+                multiline: False
+                size_hint_y: None
+                height: 45
+                padding: [10, 10]
+
+            TextInput:
+                id: password_input
+                hint_text: "Password"
+                password: True
+                multiline: False
+                size_hint_y: None
+                height: 45
+                padding: [10, 10]
+
+        Button:
+            text: "Login"
+            size_hint_y: None
+            height: 50
+            background_normal: ''
+            background_color: (0.2, 0.6, 1, 1)
+            color: (1, 1, 1, 1)
+
+            on_press: app.login()
+
+        Widget:

@@ -1,0 +1,83 @@
+<WalletScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 15
+
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 10
+
+            Button:
+                text: "<"
+                size_hint_x: None
+                width: 50
+                on_press: app.go_back_to_dashboard()
+
+            Label:
+                text: "My Wallet"
+                font_size: 26
+                bold: True
+
+        Widget:
+            size_hint_y: None
+            height: dp(20)
+
+        Label:
+            text: "Current Balance"
+            font_size: 18
+            color: (0.7, 0.7, 0.7, 1)
+            size_hint_y: None
+            height: 30
+
+        Label:
+            id: balance_label
+            text: "0.00€"
+            font_size: 45
+            bold: True
+            color: (0.1, 0.7, 0.3, 1)
+            size_hint_y: None
+            height: 60
+
+        Widget:
+            size_hint_y: None
+            height: dp(30)
+
+        TextInput:
+            id: amount_input
+            hint_text: "Enter amount to add..."
+            input_filter: 'float'
+            multiline: False
+            size_hint_y: None
+            height: dp(50)
+            font_size: 18
+            padding: [10, 12, 10, 10]
+
+        Label:
+            id: msg_label
+            text: ""
+            font_size: 16
+            bold: True
+            size_hint_y: None
+            height: self.texture_size[1] if self.text else 0
+
+        Button:
+            text: "Add Funds"
+            size_hint_y: None
+            height: dp(55)
+            font_size: 20
+            bold: True
+            color: (1, 1, 1, 1)
+            background_normal: ''
+            background_color: (0.1, 0.6, 0.9, 1)
+            canvas.before:
+                Color:
+                    rgba: (0.1, 0.6, 0.9, 1)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [15]
+            on_press: app.add_funds(amount_input.text)
+
+        Widget:

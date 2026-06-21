@@ -1,0 +1,21 @@
+[project]
+name = "gui-app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "certifi==2026.2.25",
+    "charset-normalizer==3.4.5",
+    "docutils==0.22.4",
+    "filetype==1.2.0",
+    "idna==3.11",
+    "kivy==2.3.1",
+    "kivy-garden==0.1.5",
+    "mariadb==1.1.14",
+    "packaging==26.0",
+    "pygments==2.19.2",
+    "python-dotenv>=1.2.2",
+    "requests==2.32.5",
+    "urllib3==2.6.3",
+]

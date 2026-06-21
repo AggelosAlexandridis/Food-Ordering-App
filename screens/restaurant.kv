@@ -1,0 +1,62 @@
+<RestaurantScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 15
+
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 10
+
+            Button:
+                text: "<"
+                size_hint_x: None
+                width: 50
+                on_press: app.go_back_to_dashboard()
+
+            Label:
+                text: "Menu"
+                font_size: 26
+                bold: True
+
+            Button:
+                id: cart
+                text: app.cart_text
+                size_hint_x: None
+                width: 75
+                on_press: app.open_cart()
+
+        RecycleView:
+            id: rv
+            viewclass: 'RestaurantItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(90)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+                orientation: 'vertical'
+
+
+<RestaurantItem@Button>:
+    text: root.text
+    size_hint_y: None
+    height: dp(90)
+
+    background_normal: ''
+    background_color: (1, 1, 1, 1)
+
+    color: (0, 0, 0, 1)
+    font_size: 18
+
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15]
+
+    on_press: app.on_food_press(self.id)
