@@ -1,5 +1,3 @@
-from xml.sax.handler import property_interning_dict
-from charset_normalizer import constant
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import StringProperty
@@ -9,7 +7,6 @@ from db import DBManager
 
 class LoginScreen(Screen):
     pass
-
 
 class DashboardScreen(Screen):
     def on_enter(self):
