@@ -36,7 +36,7 @@ class WalletScreen(Screen):
 class RestaurantScreen(Screen):
     def on_enter(self):
         app = App.get_running_app()
-        self.ids.rv.data = app.db.get_menu(app.user_id)
+        self.ids.rv.data = app.db.get_menu(app.selected_restaurant_id)
 
 
 class CartScreen(Screen):
