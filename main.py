@@ -255,7 +255,7 @@ class MyApp(App):
 
         wallet_screen.ids.balance_label.text = f"{new_balance:.2f}€"
         wallet_screen.ids.amount_input.text = ""
-        wallet_screen.ids.msg_label.color = (0.1, 0.7, 0.3, 1) # Green text
+        wallet_screen.ids.msg_label.color = (0.1, 0.7, 0.3, 1)
         wallet_screen.ids.msg_label.text = f"Successfully added {amount:.2f}€!"
 
 
