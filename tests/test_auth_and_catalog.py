@@ -10,7 +10,6 @@ class TestAuthAndCatalog(unittest.TestCase):
         self.db.conn.rollback()
         self.db.close()
 
-    # ---------- Auth Logic ----------
     def test_check_login_invalid_credentials_returns_none(self):
         result = self.db.check_login("fake_user_99", "wrongpass")
         self.assertIsNone(result)
@@ -27,7 +26,6 @@ class TestAuthAndCatalog(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result[1].upper(), "CUSTOMER")
 
-    # ---------- Catalog Logic (Restaurants & Menu) ----------
     def test_get_restaurants_returns_list(self):
         result = self.db.get_restaurants()
         self.assertIsInstance(result, list)

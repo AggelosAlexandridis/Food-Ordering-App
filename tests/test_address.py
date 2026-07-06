@@ -6,11 +6,9 @@ class TestAddressLogic(unittest.TestCase):
         self.db = DBManager()
         cur = self.db.conn.cursor()
         
-        # 1. Clean up any stuck data from previous crashed runs
         cur.execute("DELETE FROM users WHERE username = 'address_user'")
         self.db.conn.commit()
 
-        # 2. Insert fresh test user
         cur.execute(
             "INSERT INTO users (username, password, role, email, phone_number) VALUES (%s, %s, %s, %s, %s)",
             ("address_user", "pass", "CUSTOMER", "address@test.com", "1010101010")
@@ -19,14 +17,12 @@ class TestAddressLogic(unittest.TestCase):
         cur.close()
 
     def tearDown(self):
-        # 3. Explicitly delete the test user (which cascades to addresses)
         cur = self.db.conn.cursor()
         cur.execute("DELETE FROM users WHERE id = %s", (self.user_id,))
         self.db.conn.commit()
         self.db.close()
 
     def test_get_addresses_empty(self):
-        # A new user shouldn't have any addresses yet
         result = self.db.get_addresses(self.user_id)
         self.assertEqual(result, [])
 

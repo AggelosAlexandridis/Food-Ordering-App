@@ -6,21 +6,18 @@ class TestWalletAndCart(unittest.TestCase):
         self.db = DBManager()
         cur = self.db.conn.cursor()
         
-        # Clean up any stuck users and restaurants from previous tests
         cur.execute("DELETE FROM users WHERE username IN ('wallet_test_user', 'wallet_upd_user')")
         cur.execute("DELETE FROM restaurants WHERE name = 'Cart Rest'")
         self.db.conn.commit()
         cur.close()
 
     def tearDown(self):
-        # Explicitly delete users and restaurants to prevent duplicates/clutter later
         cur = self.db.conn.cursor()
         cur.execute("DELETE FROM users WHERE username IN ('wallet_test_user', 'wallet_upd_user')")
         cur.execute("DELETE FROM restaurants WHERE name = 'Cart Rest'")
         self.db.conn.commit()
         self.db.close()
 
-    # ---------- Wallet Logic ----------
     def test_get_balance_for_nonexistent_user_returns_none(self):
         result = self.db.get_balance(999999)
         self.assertIsNone(result)
@@ -51,11 +48,9 @@ class TestWalletAndCart(unittest.TestCase):
         success = self.db.update_balance(user_id, 50.0)
         self.assertTrue(success)
         
-        # Verify it actually changed
         new_balance = self.db.get_balance(user_id)
         self.assertEqual(new_balance, 50.0)
 
-    # ---------- Cart Logic ----------
     def test_get_cart_items_empty_cart(self):
         result = self.db.get_cart_items([])
         self.assertEqual(result, [])
