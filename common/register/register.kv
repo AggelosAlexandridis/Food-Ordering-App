@@ -1,0 +1,112 @@
+<RegisterScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(32), dp(28), dp(32), dp(24)]
+        spacing: dp(12)
+
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(4)
+
+            Label:
+                text: "Create Account"
+                font_size: 26
+                bold: True
+                color: color_text
+                size_hint_y: None
+                height: dp(40)
+
+            Label:
+                text: "Join to start ordering"
+                font_size: 15
+                color: color_text_soft
+                size_hint_y: None
+                height: dp(24)
+
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+
+            Card:
+                orientation: "vertical"
+                padding: dp(22)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+
+                FieldInput:
+                    id: username_input
+                    hint_text: "Username"
+
+                FieldInput:
+                    id: email_input
+                    hint_text: "Email"
+                    focus_previous: username_input
+
+                FieldInput:
+                    id: phone_input
+                    hint_text: "Phone number"
+                    focus_previous: email_input
+
+                FieldInput:
+                    id: password_input
+                    hint_text: "Password"
+                    password: True
+                    focus_previous: phone_input
+
+                FieldInput:
+                    id: confirm_input
+                    hint_text: "Confirm password"
+                    password: True
+                    focus_previous: password_input
+                    on_text_validate: app.register()
+
+                Label:
+                    id: error_label
+                    text: ""
+                    color: color_danger
+                    font_size: 15
+                    bold: True
+                    size_hint_y: None
+                    height: self.texture_size[1] if self.text else 0
+
+                ActionBtn:
+                    text: "Create Account"
+                    btn_color: color_primary
+                    on_press: app.register()
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(30)
+            spacing: dp(6)
+            pos_hint: {"center_x": 0.5}
+            size_hint_x: None
+            width: self.minimum_width
+
+            Label:
+                text: "Already have an account?"
+                font_size: 14
+                color: color_text_soft
+                size_hint_x: None
+                width: self.texture_size[0]
+
+            Button:
+                text: "Log in"
+                font_size: 14
+                bold: True
+                color: color_primary
+                background_normal: ''
+                background_down: ''
+                background_color: (0, 0, 0, 0)
+                size_hint_x: None
+                width: self.texture_size[0]
+                on_press: app.open_login_screen()

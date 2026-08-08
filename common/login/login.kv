@@ -1,0 +1,115 @@
+<LoginScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(32), dp(48), dp(32), dp(32)]
+
+        Widget:
+            size_hint_y: 0.6
+
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(6)
+
+            Widget:
+                size_hint: None, None
+                size: dp(72), dp(72)
+                pos_hint: {"center_x": 0.5}
+
+                canvas.before:
+                    Color:
+                        rgba: color_primary
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [20]
+
+                Label:
+                    text: "F"
+                    font_size: 34
+                    bold: True
+                    color: (1, 1, 1, 1)
+                    pos: self.parent.pos
+                    size: self.parent.size
+
+            Label:
+                text: "Food Delivery"
+                font_size: 28
+                bold: True
+                color: color_text
+                size_hint_y: None
+                height: dp(50)
+
+            Label:
+                text: "Login to continue ordering"
+                font_size: 15
+                color: color_text_soft
+                size_hint_y: None
+                height: dp(26)
+
+        Widget:
+            size_hint_y: None
+            height: dp(36)
+
+        Card:
+            orientation: "vertical"
+            padding: dp(22)
+            spacing: dp(14)
+            size_hint_y: None
+            height: self.minimum_height
+            pos_hint: {"center_x": 0.5}
+
+            FieldInput:
+                id: username_input
+                hint_text: "Username or Email"
+                on_text_validate: app.login()
+
+            FieldInput:
+                id: password_input
+                hint_text: "Password"
+                password: True
+                focus_previous: username_input
+                on_text_validate: app.login()
+
+            ActionBtn:
+                text: "Login"
+                btn_color: color_primary
+                on_press: app.login()
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(30)
+            spacing: dp(6)
+            pos_hint: {"center_x": 0.5}
+            size_hint_x: None
+            width: self.minimum_width
+
+            Label:
+                text: "Don't have an account?"
+                font_size: 14
+                color: color_text_soft
+                size_hint_x: None
+                width: self.texture_size[0]
+
+            Button:
+                text: "Register"
+                font_size: 14
+                bold: True
+                color: color_primary
+                background_normal: ''
+                background_down: ''
+                background_color: (0, 0, 0, 0)
+                size_hint_x: None
+                width: self.texture_size[0]
+                on_press: app.open_register_screen()
+
+        Widget:
+            size_hint_y: 1

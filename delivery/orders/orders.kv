@@ -1,0 +1,69 @@
+<DeliveryOrdersScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(14)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.open_delivery_dashboard()
+
+            TitleLabel:
+                id: title_label
+                text: "Ready Orders"
+
+        Label:
+            id: error_label
+            text: ""
+            color: color_danger
+            font_size: 15
+            bold: True
+            size_hint_y: None
+            height: self.texture_size[1] if self.text else 0
+
+        RecycleView:
+            id: rv
+            viewclass: 'DeliveryReadyOrderItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(78)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+                orientation: 'vertical'
+
+
+<DeliveryReadyOrderItem@ListCard>:
+    accent: color_success
+    spacing: dp(10)
+
+    Label:
+        text: root.text
+        font_size: 15
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    ActionBtn:
+        text: "Claim"
+        btn_color: color_primary
+        size_hint: None, None
+        size: dp(90), dp(44)
+        font_size: 14
+        on_press: app.claim_order(root.id)

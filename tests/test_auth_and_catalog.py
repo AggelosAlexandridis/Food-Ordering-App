@@ -1,4 +1,6 @@
 import unittest
+
+import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
 
 class TestAuthAndCatalog(unittest.TestCase):
@@ -11,7 +13,7 @@ class TestAuthAndCatalog(unittest.TestCase):
         self.db.close()
 
     def test_check_login_invalid_credentials_returns_none(self):
-        result = self.db.check_login("fake_user_99", "wrongpass")
+        result = self.db.login.check_login("fake_user_99", "wrongpass")
         self.assertIsNone(result)
 
     def test_check_login_valid_user(self):
@@ -22,19 +24,19 @@ class TestAuthAndCatalog(unittest.TestCase):
         )
         cur.close()
 
-        result = self.db.check_login("auth_test_user", "test_pass")
+        result = self.db.login.check_login("auth_test_user", "test_pass")
         self.assertIsNotNone(result)
         self.assertEqual(result[1].upper(), "CUSTOMER")
 
     def test_get_restaurants_returns_list(self):
-        result = self.db.get_restaurants()
+        result = self.db.restaurants.get_restaurants()
         self.assertIsInstance(result, list)
         if result:
             self.assertIn("id", result[0])
             self.assertIn("text", result[0])
 
     def test_get_menu_for_nonexistent_restaurant_returns_empty(self):
-        result = self.db.get_menu(999999)
+        result = self.db.restaurants.get_menu(999999)
         self.assertEqual(result, [])
 
     def test_get_menu_returns_items(self):
@@ -47,7 +49,7 @@ class TestAuthAndCatalog(unittest.TestCase):
         )
         cur.close()
 
-        result = self.db.get_menu(rest_id)
+        result = self.db.restaurants.get_menu(rest_id)
         self.assertEqual(len(result), 1)
         self.assertIn("Test Burger", result[0]["text"])
 

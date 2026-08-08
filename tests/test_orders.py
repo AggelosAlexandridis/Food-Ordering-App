@@ -1,4 +1,6 @@
 import unittest
+
+import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
 
 class TestOrderLogic(unittest.TestCase):
@@ -28,11 +30,11 @@ class TestOrderLogic(unittest.TestCase):
         self.db.close()
 
     def test_get_user_orders_empty(self):
-        result = self.db.get_user_orders(self.user_id)
+        result = self.db.orders.get_user_orders(self.user_id)
         self.assertEqual(result, [])
 
     def test_submit_order_fails_without_wallet(self):
-        success = self.db.submit_order(self.user_id, self.address_id, 25.50)
+        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CARD")
         self.assertFalse(success)
 
     def test_submit_order_success(self):
@@ -40,17 +42,21 @@ class TestOrderLogic(unittest.TestCase):
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (self.user_id, 100.0))
         cur.close()
 
-        success = self.db.submit_order(self.user_id, self.address_id, 25.50)
+        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CARD")
+        self.assertTrue(success)
+
+    def test_submit_order_cash_succeeds_without_wallet(self):
+        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CASH")
         self.assertTrue(success)
 
     def test_submit_and_get_user_orders(self):
         cur = self.db.conn.cursor()
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (self.user_id, 100.0))
         cur.close()
-        
-        self.db.submit_order(self.user_id, self.address_id, 42.00)
 
-        orders = self.db.get_user_orders(self.user_id)
+        self.db.orders.submit_order(self.user_id, self.address_id, 42.00, "CARD")
+
+        orders = self.db.orders.get_user_orders(self.user_id)
         self.assertEqual(len(orders), 1)
         self.assertIn("Total: 42.00€", orders[0]["text"])
         self.assertIn("Status: PENDING", orders[0]["text"])

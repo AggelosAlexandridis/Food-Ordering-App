@@ -1,0 +1,272 @@
+#:set color_bg (0.965, 0.965, 0.973, 1)
+#:set color_surface (1, 1, 1, 1)
+#:set color_primary (1, 0.357, 0.235, 1)
+#:set color_primary_dark (0.808, 0.220, 0.122, 1)
+#:set color_primary_soft (1, 0.906, 0.882, 1)
+#:set color_text (0.110, 0.110, 0.118, 1)
+#:set color_text_soft (0.557, 0.557, 0.584, 1)
+#:set color_border (0.902, 0.902, 0.914, 1)
+#:set color_success (0.086, 0.639, 0.408, 1)
+#:set color_success_soft (0.867, 0.961, 0.910, 1)
+#:set color_danger (0.851, 0.235, 0.235, 1)
+#:set color_danger_soft (0.988, 0.902, 0.902, 1)
+#:set color_warning (0.902, 0.573, 0.098, 1)
+#:set color_warning_soft (0.996, 0.933, 0.851, 1)
+
+
+<IconBtn@Button>:
+    size_hint: None, None
+    size: dp(44), dp(44)
+    font_size: 20
+    bold: True
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: color_text
+    canvas.before:
+        Color:
+            rgba: color_border if self.state == 'down' else color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: color_border
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, self.height / 2)
+            width: 1.2
+
+
+<DangerIconBtn@Button>:
+    size_hint: None, None
+    size: dp(44), dp(44)
+    font_size: 15
+    bold: True
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: color_danger
+    canvas.before:
+        Color:
+            rgba: color_danger_soft
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+
+
+<PillBtn@Button>:
+    size_hint: None, None
+    height: dp(40)
+    width: self.texture_size[0] + dp(30)
+    font_size: 14
+    bold: True
+    padding: [dp(6), 0]
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: color_primary_dark
+    canvas.before:
+        Color:
+            rgba: color_primary_soft
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+
+
+<TitleLabel@Label>:
+    font_size: 24
+    bold: True
+    color: color_text
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.size
+
+
+<SubLabel@Label>:
+    font_size: 15
+    color: color_text_soft
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.size
+
+
+<FieldInput@TextInput>:
+    size_hint_y: None
+    height: dp(52)
+    font_size: 16
+    padding: [dp(16), dp(16), dp(16), dp(14)]
+    multiline: False
+    write_tab: False
+    background_normal: ''
+    background_active: ''
+    background_disabled_normal: ''
+    background_color: (0, 0, 0, 0)
+    foreground_color: color_text
+    hint_text_color: color_text_soft
+    cursor_color: color_text
+    cursor_width: dp(2)
+    cursor_blink: True
+    selection_color: (color_text[0], color_text[1], color_text[2], 0.2)
+    canvas.before:
+        Color:
+            rgba: color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+        Color:
+            rgba: color_text if self.focus else color_border
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 14)
+            width: 1.4 if self.focus else 1
+
+
+<ActionBtn>:
+    size_hint_y: None
+    height: dp(54)
+    font_size: 18
+    bold: True
+    color: (1, 1, 1, 1)
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: (self.btn_color[0] * 0.82, self.btn_color[1] * 0.82, self.btn_color[2] * 0.82, 1) if self.state == 'down' else self.btn_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [16]
+
+
+<GhostBtn>:
+    size_hint_y: None
+    height: dp(54)
+    font_size: 17
+    bold: True
+    color: self.line_color
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: color_border if self.state == 'down' else color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [16]
+        Color:
+            rgba: self.line_color
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 16)
+            width: 1.4
+
+
+<Card@BoxLayout>:
+    canvas.before:
+        Color:
+            rgba: color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [18]
+        Color:
+            rgba: color_border
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 18)
+            width: 1
+
+
+<ListCard>:
+    size_hint_y: None
+    height: dp(78)
+    padding: [dp(18), dp(12), dp(18), dp(12)]
+    canvas.before:
+        Color:
+            rgba: color_bg if self.state == 'down' else color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [16]
+        Color:
+            rgba: color_border
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 16)
+            width: 1
+        Color:
+            rgba: self.accent
+        RoundedRectangle:
+            pos: self.x, self.y + dp(14)
+            size: dp(4), self.height - dp(28)
+            radius: [2]
+
+
+<TogglePill>:
+    size_hint_y: None
+    height: dp(46)
+    font_size: 15
+    bold: True
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: (1, 1, 1, 1) if self.selected else color_text
+    canvas.before:
+        Color:
+            rgba: color_primary if self.selected else color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+        Color:
+            rgba: (0, 0, 0, 0) if self.selected else color_border
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 14)
+            width: 1
+
+
+<ProfileIconBtn>:
+    size_hint: None, None
+    size: dp(44), dp(44)
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: (0.851, 0.851, 0.863, 1) if self.state == 'down' else (0.902, 0.902, 0.914, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: color_text_soft
+        Ellipse:
+            pos: self.center_x - self.height * 0.14, self.center_y + self.height * 0.02
+            size: self.height * 0.28, self.height * 0.28
+        Ellipse:
+            pos: self.center_x - self.height * 0.24, self.y + self.height * 0.12
+            size: self.height * 0.48, self.height * 0.34
+            angle_start: 0
+            angle_end: 180
+
+
+<ThemedSpinnerOption>:
+    size_hint_y: None
+    height: dp(44)
+    font_size: 15
+    background_normal: ''
+    background_down: ''
+    background_color: (0, 0, 0, 0)
+    color: color_text
+    canvas.before:
+        Color:
+            rgba: color_primary_soft if self.state == 'down' else color_surface
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: color_border
+        Line:
+            points: [self.x, self.y, self.right, self.y]
+            width: 1

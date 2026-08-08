@@ -1,4 +1,6 @@
 import unittest
+
+import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
 
 class TestWalletAndCart(unittest.TestCase):
@@ -19,7 +21,7 @@ class TestWalletAndCart(unittest.TestCase):
         self.db.close()
 
     def test_get_balance_for_nonexistent_user_returns_none(self):
-        result = self.db.get_balance(999999)
+        result = self.db.wallet.get_balance(999999)
         self.assertIsNone(result)
 
     def test_get_balance_returns_float(self):
@@ -32,7 +34,7 @@ class TestWalletAndCart(unittest.TestCase):
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (user_id, 42.5))
         cur.close()
 
-        result = self.db.get_balance(user_id)
+        result = self.db.wallet.get_balance(user_id)
         self.assertEqual(result, 42.5)
 
     def test_update_balance_success(self):
@@ -45,14 +47,14 @@ class TestWalletAndCart(unittest.TestCase):
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (user_id, 10.0))
         cur.close()
 
-        success = self.db.update_balance(user_id, 50.0)
+        success = self.db.wallet.update_balance(user_id, 50.0)
         self.assertTrue(success)
         
-        new_balance = self.db.get_balance(user_id)
+        new_balance = self.db.wallet.get_balance(user_id)
         self.assertEqual(new_balance, 50.0)
 
     def test_get_cart_items_empty_cart(self):
-        result = self.db.get_cart_items([])
+        result = self.db.orders.get_cart_items([])
         self.assertEqual(result, [])
 
     def test_get_cart_items_calculates_total_correctly(self):
@@ -67,7 +69,7 @@ class TestWalletAndCart(unittest.TestCase):
         cur.close()
 
         cart = [{"id": food_id, "quantity": 3}]
-        result = self.db.get_cart_items(cart)
+        result = self.db.orders.get_cart_items(cart)
 
         self.assertEqual(len(result), 1)
         self.assertIn("x3", result[0]["text"])

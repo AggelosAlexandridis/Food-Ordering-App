@@ -1,0 +1,104 @@
+<ChefDashboardScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(14)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(10)
+
+            TitleLabel:
+                id: restaurant_label
+                text: "Your restaurant"
+
+            PillBtn:
+                id: new_orders_btn
+                text: "New Orders: 0"
+
+            PillBtn:
+                text: "Invite Delivery"
+                on_press: root.open_invite_code_popup()
+
+            DangerIconBtn:
+                text: "Exit"
+                width: dp(56)
+                on_press: app.logout()
+
+        SubLabel:
+            text: "Orders"
+            size_hint_y: None
+            height: dp(20)
+
+        RecycleView:
+            id: rv
+            viewclass: 'ChefOrderItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(122)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+                orientation: 'vertical'
+
+
+<ChefOrderItem@OrderListCard>:
+    orientation: 'vertical'
+    height: dp(122)
+    padding: [dp(18), dp(10), dp(18), dp(10)]
+    accent:
+        color_warning if root.status == 'PENDING' else \
+        (color_primary if root.status == 'CONFIRMED' else \
+        (color_success if root.status == 'READY' else color_text_soft))
+
+    Label:
+        text: root.text
+        font_size: 14
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'top'
+        text_size: self.size
+        padding: [dp(12), dp(4)]
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(40)
+        spacing: dp(8)
+        padding: [dp(12), 0, 0, 0]
+
+        ActionBtn:
+            text: "Confirm"
+            btn_color: color_primary
+            size_hint_y: None
+            height: dp(38) if root.status == 'PENDING' else 0
+            opacity: 1 if root.status == 'PENDING' else 0
+            disabled: root.status != 'PENDING'
+            on_press: app.confirm_order(root.id)
+
+        ActionBtn:
+            text: "Mark Ready"
+            btn_color: color_success
+            size_hint_y: None
+            height: dp(38) if root.status == 'CONFIRMED' else 0
+            opacity: 1 if root.status == 'CONFIRMED' else 0
+            disabled: root.status != 'CONFIRMED'
+            on_press: app.mark_order_ready(root.id)
+
+        GhostBtn:
+            text: "Cancel"
+            line_color: color_danger
+            size_hint_y: None
+            height: dp(38) if root.status in ('PENDING', 'CONFIRMED') else 0
+            opacity: 1 if root.status in ('PENDING', 'CONFIRMED') else 0
+            disabled: root.status not in ('PENDING', 'CONFIRMED')
+            on_press: app.cancel_order_by_chef(root.id)

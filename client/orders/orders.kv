@@ -1,0 +1,62 @@
+<OrdersScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(16)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_profile()
+
+            TitleLabel:
+                text: "My Orders"
+
+        RecycleView:
+            id: rv
+            viewclass: 'OrderItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(78)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+                orientation: 'vertical'
+
+
+<OrderItem@OrderListCard>:
+    height: dp(78)
+    spacing: dp(10)
+    accent: color_success if root.status == 'DELIVERED' else (color_warning if root.status == 'PENDING' else (color_danger if root.status == 'CANCELLED' else color_text_soft))
+
+    Label:
+        text: root.text
+        font_size: 15
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), dp(4)]
+
+    GhostBtn:
+        text: "Delete"
+        line_color: color_danger
+        size_hint: None, None
+        size: (dp(76), dp(34)) if root.status == 'PENDING' else (0, dp(34))
+        pos_hint: {"center_y": 0.5}
+        opacity: 1 if root.status == 'PENDING' else 0
+        disabled: root.status != 'PENDING'
+        font_size: 12
+        on_press: app.confirm_delete_order(root.id, root.text)

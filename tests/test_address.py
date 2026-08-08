@@ -1,4 +1,6 @@
 import unittest
+
+import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
 
 class TestAddressLogic(unittest.TestCase):
@@ -23,17 +25,17 @@ class TestAddressLogic(unittest.TestCase):
         self.db.close()
 
     def test_get_addresses_empty(self):
-        result = self.db.get_addresses(self.user_id)
+        result = self.db.addresses.get_addresses(self.user_id)
         self.assertEqual(result, [])
 
     def test_add_address_success(self):
-        success = self.db.add_address(self.user_id, "123 Test Street")
+        success = self.db.addresses.add_address(self.user_id, "123 Test Street")
         self.assertTrue(success)
 
     def test_add_and_retrieve_address(self):
-        self.db.add_address(self.user_id, "456 Mock Blvd")
+        self.db.addresses.add_address(self.user_id, "456 Mock Blvd")
         
-        result = self.db.get_addresses(self.user_id)
+        result = self.db.addresses.get_addresses(self.user_id)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["address"], "456 Mock Blvd")
         self.assertIn("id", result[0])

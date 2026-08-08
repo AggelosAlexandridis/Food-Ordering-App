@@ -1,0 +1,92 @@
+<AddressScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(12)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_profile()
+
+            TitleLabel:
+                text: "Addresses"
+
+        SubLabel:
+            text: "Saved addresses"
+            size_hint_y: None
+            height: dp(22)
+
+        RecycleView:
+            id: rv
+            viewclass: 'AddressItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(66)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(10)
+                orientation: 'vertical'
+
+        Card:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(12)
+            size_hint_y: None
+            height: self.minimum_height
+
+            SubLabel:
+                text: "Add a new address"
+                size_hint_y: None
+                height: dp(20)
+
+            FieldInput:
+                id: address_input
+                hint_text: "e.g. 24 Panepistimiou St, Athens"
+
+            Label:
+                id: error_label
+                text: ""
+                color: color_danger
+                font_size: 15
+                bold: True
+                size_hint_y: None
+                height: self.texture_size[1] if self.text else 0
+
+            ActionBtn:
+                text: "Save Address"
+                btn_color: color_primary
+                on_press: app.save_new_address(address_input.text)
+
+
+<AddressItem@ListCard>:
+    accent: color_primary
+    spacing: dp(10)
+
+    Label:
+        text: root.text
+        font_size: 16
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    DangerIconBtn:
+        text: "Remove"
+        size: dp(88), dp(40)
+        font_size: 13
+        on_press: app.confirm_delete_address(root.id, root.text)

@@ -1,0 +1,92 @@
+<WalletScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(18)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_dashboard()
+
+            TitleLabel:
+                text: "My Wallet"
+
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: dp(140)
+            padding: dp(24)
+
+            canvas.before:
+                Color:
+                    rgba: color_primary
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [20]
+
+            Label:
+                text: "CURRENT BALANCE"
+                font_size: 13
+                bold: True
+                color: (1, 1, 1, 0.85)
+                halign: 'left'
+                valign: 'top'
+                text_size: self.size
+                size_hint_y: None
+                height: dp(20)
+
+            Label:
+                id: balance_label
+                text: "0.00€"
+                font_size: 42
+                bold: True
+                color: (1, 1, 1, 1)
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+
+        Card:
+            orientation: "vertical"
+            padding: dp(22)
+            spacing: dp(14)
+            size_hint_y: None
+            height: self.minimum_height
+
+            SubLabel:
+                text: "Add funds"
+                size_hint_y: None
+                height: dp(20)
+
+            FieldInput:
+                id: amount_input
+                hint_text: "Enter amount to add..."
+                input_filter: 'float'
+
+            Label:
+                id: msg_label
+                text: ""
+                font_size: 15
+                bold: True
+                color: color_success
+                size_hint_y: None
+                height: self.texture_size[1] if self.text else 0
+
+            ActionBtn:
+                text: "Add Funds"
+                btn_color: color_primary
+                on_press: app.add_funds(amount_input.text)
+
+        Widget:

@@ -1,0 +1,271 @@
+#:import ThemedSpinnerOption common.widgets.ThemedSpinnerOption
+
+
+<CartScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(12)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(10)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_menu()
+
+            TitleLabel:
+                text: "Checkout"
+
+            PillBtn:
+                id: balance_btn
+                text: "Balance: --€"
+                on_press: app.show_wallet()
+
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+
+                SubLabel:
+                    text: "Your order"
+                    size_hint_y: None
+                    height: dp(20)
+
+                RecycleView:
+                    id: rv
+                    viewclass: 'CartItem'
+                    size_hint_y: None
+                    height: item_box.height
+                    do_scroll_x: False
+                    do_scroll_y: False
+
+                    RecycleBoxLayout:
+                        id: item_box
+                        default_size: None, dp(78)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(12)
+                        orientation: 'vertical'
+
+                Card:
+                    orientation: "vertical"
+                    padding: dp(18)
+                    spacing: dp(10)
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    SubLabel:
+                        text: "Deliver to"
+                        size_hint_y: None
+                        height: dp(18)
+
+                    Spinner:
+                        id: address_spinner
+                        text: "Select Address"
+                        values: []
+                        option_cls: ThemedSpinnerOption
+                        font_size: 15
+                        size_hint_y: None
+                        height: dp(48)
+                        background_normal: ''
+                        background_down: ''
+                        background_color: (0, 0, 0, 0)
+                        color: color_text
+                        canvas.before:
+                            Color:
+                                rgba: color_surface
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [12]
+                            Color:
+                                rgba: color_border
+                            Line:
+                                rounded_rectangle: (self.x, self.y, self.width, self.height, 12)
+                                width: 1
+                        on_text: app.on_address_selected(self.text)
+
+                    SubLabel:
+                        text: "Pay with"
+                        size_hint_y: None
+                        height: dp(18)
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(46)
+                        spacing: dp(10)
+
+                        TogglePill:
+                            id: cash_pill
+                            text: "Cash"
+                            selected: app.selected_payment_method == "CASH"
+                            on_press: app.set_payment_method("CASH")
+
+                        TogglePill:
+                            id: card_pill
+                            text: "Card"
+                            selected: app.selected_payment_method == "CARD"
+                            on_press: app.set_payment_method("CARD")
+
+                    Button:
+                        text: app.selected_card_text if app.selected_card_text else "Choose a card  ›"
+                        size_hint_y: None
+                        height: dp(46) if app.selected_payment_method == "CARD" else 0
+                        opacity: 1 if app.selected_payment_method == "CARD" else 0
+                        disabled: app.selected_payment_method != "CARD"
+                        font_size: 15
+                        bold: True
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.size
+                        padding: [dp(14), 0]
+                        background_normal: ''
+                        background_down: ''
+                        background_color: (0, 0, 0, 0)
+                        color: color_text if app.selected_card_text else color_text_soft
+                        canvas.before:
+                            Color:
+                                rgba: color_surface
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [12]
+                            Color:
+                                rgba: color_border
+                            Line:
+                                rounded_rectangle: (self.x, self.y, self.width, self.height, 12)
+                                width: 1
+                        on_release: root.open_card_picker()
+
+                    SubLabel:
+                        text: "Add a tip"
+                        size_hint_y: None
+                        height: dp(18)
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+
+                        TogglePill:
+                            text: "No tip"
+                            font_size: 13
+                            selected: root.selected_tip_option == "NONE"
+                            on_press: root.set_tip_option("NONE")
+
+                        TogglePill:
+                            text: "10%"
+                            font_size: 13
+                            selected: root.selected_tip_option == "10"
+                            on_press: root.set_tip_option("10")
+
+                        TogglePill:
+                            text: "15%"
+                            font_size: 13
+                            selected: root.selected_tip_option == "15"
+                            on_press: root.set_tip_option("15")
+
+                        TogglePill:
+                            text: "20%"
+                            font_size: 13
+                            selected: root.selected_tip_option == "20"
+                            on_press: root.set_tip_option("20")
+
+                        TogglePill:
+                            text: "Custom"
+                            font_size: 13
+                            selected: root.selected_tip_option == "CUSTOM"
+                            on_press: root.set_tip_option("CUSTOM")
+
+                    FieldInput:
+                        id: custom_tip_input
+                        hint_text: "Custom tip amount (€)"
+                        input_filter: 'float'
+                        height: dp(46) if root.selected_tip_option == "CUSTOM" else 0
+                        opacity: 1 if root.selected_tip_option == "CUSTOM" else 0
+                        disabled: root.selected_tip_option != "CUSTOM"
+                        on_text: root.update_checkout_text()
+
+                    SubLabel:
+                        text: "Notes for the restaurant (optional)"
+                        size_hint_y: None
+                        height: dp(18)
+
+                    FieldInput:
+                        id: notes_input
+                        hint_text: "e.g. no onions, ring the bell twice..."
+                        multiline: True
+                        height: dp(70)
+
+        Label:
+            id: error_label
+            text: ""
+            color: color_danger
+            font_size: 15
+            bold: True
+            size_hint_y: None
+            height: self.texture_size[1] if self.text else 0
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(56)
+            spacing: dp(14)
+
+            GhostBtn:
+                text: "Clear Cart"
+                line_color: color_danger
+                on_press: app.clear_cart()
+
+            ActionBtn:
+                text: root.checkout_text
+                btn_color: color_success
+                on_press: app.on_checkout()
+
+
+<CartItem@ListCard>:
+    accent: color_success
+    spacing: dp(8)
+
+    Label:
+        text: root.text
+        font_size: 16
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    IconBtn:
+        text: "−"
+        size: dp(36), dp(36)
+        font_size: 20
+        on_press: app.decrement_cart_item(root.id)
+
+    IconBtn:
+        text: "+"
+        size: dp(36), dp(36)
+        font_size: 18
+        on_press: app.increment_cart_item(root.id)
+
+    DangerIconBtn:
+        text: "×"
+        size: dp(36), dp(36)
+        font_size: 20
+        on_press: app.remove_cart_item(root.id)

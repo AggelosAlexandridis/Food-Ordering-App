@@ -1,0 +1,75 @@
+<DeliveryDashboardScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(14)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(8)
+
+            TitleLabel:
+                text: "Restaurants"
+
+            PillBtn:
+                text: "My Deliveries"
+                on_press: app.open_delivery_active_screen()
+
+            PillBtn:
+                id: ready_btn
+                text: "Ready: 0"
+                on_press: app.open_delivery_restaurant_orders(None)
+
+            ProfileIconBtn:
+                on_press: app.open_delivery_profile_screen()
+
+        SubLabel:
+            text: "Tap a restaurant to see orders ready for pickup"
+            size_hint_y: None
+            height: dp(20)
+
+        RecycleView:
+            id: rv
+            viewclass: 'DeliveryRestaurantItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(78)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+                orientation: 'vertical'
+
+
+<DeliveryRestaurantItem@ListCard>:
+    accent: color_primary
+    on_press: app.open_delivery_restaurant_orders(self.id)
+
+    Label:
+        text: root.text
+        font_size: 17
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    Label:
+        text: "›"
+        font_size: 24
+        bold: True
+        color: color_text_soft
+        size_hint_x: None
+        width: dp(24)
+        halign: 'right'
+        valign: 'middle'
+        text_size: self.size

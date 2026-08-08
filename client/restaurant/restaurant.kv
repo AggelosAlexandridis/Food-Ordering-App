@@ -1,0 +1,72 @@
+<RestaurantScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(16)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_dashboard()
+
+            TitleLabel:
+                text: "Menu"
+
+            PillBtn:
+                id: cart
+                text: app.cart_text
+                on_press: app.open_cart()
+
+        SubLabel:
+            text: "Tap a dish to add it to your cart"
+            size_hint_y: None
+            height: dp(22)
+
+        RecycleView:
+            id: rv
+            viewclass: 'RestaurantItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(78)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+                orientation: 'vertical'
+
+
+<RestaurantItem@ListCard>:
+    accent: color_warning
+    on_press: app.on_food_press(self.id)
+
+    Label:
+        text: root.text
+        font_size: 17
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    Label:
+        text: "+"
+        font_size: 22
+        bold: True
+        color: color_primary
+        size_hint_x: None
+        width: dp(30)
+        halign: 'center'
+        valign: 'middle'
+        text_size: self.size

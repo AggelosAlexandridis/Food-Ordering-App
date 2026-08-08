@@ -1,0 +1,132 @@
+<CardsScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(12)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.go_back_to_profile()
+
+            TitleLabel:
+                text: "Cards"
+
+        SubLabel:
+            text: "Saved cards"
+            size_hint_y: None
+            height: dp(22)
+
+        RecycleView:
+            id: rv
+            viewclass: 'CardItem'
+
+            RecycleBoxLayout:
+                default_size: None, dp(66)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(10)
+                orientation: 'vertical'
+
+        Card:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(12)
+            size_hint_y: None
+            height: self.minimum_height
+
+            SubLabel:
+                text: "Add a new card"
+                size_hint_y: None
+                height: dp(20)
+
+            FieldInput:
+                id: holder_input
+                hint_text: "Name on card"
+
+            FieldInput:
+                id: number_input
+                hint_text: "Card number (16 digits)"
+                input_filter: 'int'
+                max_length: 16
+
+            BoxLayout:
+                size_hint_y: None
+                height: dp(52)
+                spacing: dp(12)
+
+                FieldInput:
+                    id: cvv_input
+                    hint_text: "CVV"
+                    input_filter: 'int'
+                    max_length: 4
+                    password: True
+
+                FieldInput:
+                    id: expiry_input
+                    hint_text: "MM/YY"
+                    max_length: 5
+
+            BoxLayout:
+                size_hint_y: None
+                height: dp(46)
+                spacing: dp(10)
+
+                TogglePill:
+                    id: visa_pill
+                    text: "Visa"
+                    selected: True
+                    on_press: root.select_type("VISA")
+
+                TogglePill:
+                    id: mastercard_pill
+                    text: "Mastercard"
+                    selected: False
+                    on_press: root.select_type("MASTERCARD")
+
+            Label:
+                id: error_label
+                text: ""
+                color: color_danger
+                font_size: 15
+                bold: True
+                size_hint_y: None
+                height: self.texture_size[1] if self.text else 0
+
+            ActionBtn:
+                text: "Save Card"
+                btn_color: color_primary
+                on_press: root.save_card()
+
+
+<CardItem@ListCard>:
+    accent: color_primary
+    spacing: dp(10)
+
+    Label:
+        text: root.text
+        font_size: 15
+        bold: True
+        color: color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    DangerIconBtn:
+        text: "Remove"
+        size: dp(88), dp(40)
+        font_size: 13
+        on_press: app.confirm_delete_card(root.id, root.text)
