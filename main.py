@@ -27,6 +27,7 @@ from client.wallet.wallet import WalletScreen  # noqa: F401
 from client.cards.cards import CardsScreen  # noqa: F401
 from client.profile.profile import ProfileScreen  # noqa: F401
 from chef.dashboard.dashboard import ChefDashboardScreen  # noqa: F401
+from chef.menu.menu import ChefMenuScreen  # noqa: F401
 from delivery.dashboard.dashboard import DeliveryDashboardScreen  # noqa: F401
 from delivery.orders.orders import DeliveryOrdersScreen  # noqa: F401
 from delivery.active.active import DeliveryActiveScreen  # noqa: F401
@@ -68,6 +69,7 @@ class MyApp(App):
         Builder.load_file("client/cards/cards.kv")
         Builder.load_file("client/profile/profile.kv")
         Builder.load_file("chef/dashboard/dashboard.kv")
+        Builder.load_file("chef/menu/menu.kv")
         Builder.load_file("delivery/dashboard/dashboard.kv")
         Builder.load_file("delivery/orders/orders.kv")
         Builder.load_file("delivery/active/active.kv")
@@ -172,6 +174,32 @@ class MyApp(App):
         restaurant_id = self.db.users.get_restaurant_id(self.user_id)
         self.db.orders.cancel_order_by_chef(order_id, restaurant_id, self.user_id)
         self.root.get_screen("chef_dashboard").refresh()
+
+    def open_chef_dashboard(self):
+        self.root.transition = SlideTransition(direction="right")
+        self.root.current = "chef_dashboard"
+
+    def open_chef_menu_screen(self):
+        self.root.transition = SlideTransition(direction="left")
+        self.root.current = "chef_menu"
+
+    def confirm_delete_food_item(self, food_id, food_text):
+        self._confirm_action(
+            "Remove dish",
+            f'Remove "{food_text}"?\nThis cannot be undone.',
+            lambda: self.delete_food_item(food_id),
+            confirm_label="Delete",
+        )
+
+    def delete_food_item(self, food_id):
+        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
+        self.db.restaurants.delete_food_item(food_id, restaurant_id)
+        self.root.get_screen("chef_menu").refresh_menu()
+
+    def toggle_food_item_availability(self, food_id):
+        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
+        self.db.restaurants.toggle_food_availability(food_id, restaurant_id)
+        self.root.get_screen("chef_menu").refresh_menu()
 
     def open_delivery_dashboard(self):
         self.root.transition = SlideTransition(direction="right")
@@ -407,8 +435,10 @@ class MyApp(App):
         )
 
     def delete_address(self, address_id):
-        success = self.db.addresses.delete_address(self.user_id, address_id)
+        success, error = self.db.addresses.delete_address(self.user_id, address_id)
+
         if not success:
+            self._show_alert("Can't delete address", error or "Error deleting address. Please try again.")
             return
 
         if self.selected_address_id == address_id:
@@ -468,6 +498,21 @@ class MyApp(App):
 
     def on_checkout(self):
         cart_screen = self.root.get_screen("cart")
+
+        cart_food_ids = [item["id"] for item in self.cart]
+        food_items = self.db.restaurants.get_items_by_ids(cart_food_ids)
+        unavailable_names = [item["name"] for item in food_items if not item["available"]]
+
+        if unavailable_names:
+            for item in food_items:
+                if not item["available"]:
+                    self.remove_cart_item(item["id"])
+            self._show_alert(
+                "Items no longer available",
+                "These items are no longer available and were removed from your cart: "
+                f"{', '.join(unavailable_names)}. Please review your order.",
+            )
+            return
 
         if self.selected_address_id is None:
             self._show_alert("Address required", "Please select a delivery address before placing your order.")

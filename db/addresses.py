@@ -1,3 +1,6 @@
+import mariadb
+
+
 class Addresses:
     def __init__(self, conn):
         self.conn = conn
@@ -33,9 +36,18 @@ class Addresses:
                     "DELETE FROM addresses WHERE id = %s AND user_id = %s",
                     (address_id, user_id),
                 )
+                deleted = cur.rowcount == 1
+
+            if not deleted:
+                self.conn.rollback()
+                return False, "Address not found."
+
             self.conn.commit()
-            return True
+            return True, None
+        except mariadb.IntegrityError:
+            self.conn.rollback()
+            return False, "This address is used by an existing order and can't be deleted."
         except Exception as e:
             print(f"Database error deleting address: {e}")
             self.conn.rollback()
-            return False
+            return False, "Error deleting address. Please try again."

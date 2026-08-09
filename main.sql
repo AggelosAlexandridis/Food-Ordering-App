@@ -17,7 +17,7 @@ create table if not exists users (
     email varchar(255) not null unique,
     phone_number varchar(255) not null unique,
     created_at timestamp default current_timestamp,
-    role enum('CUSTOMER', 'CHEF', 'DELIVERY', 'ADMIN') default 'CUSTOMER',
+    role enum('CUSTOMER', 'CHEF', 'DELIVERY') default 'CUSTOMER',
     restaurant_id int,
 
     constraint fk_restaurant_chef
@@ -185,6 +185,7 @@ create table if not exists food(
     name varchar(255) not null,
     price decimal(10, 2) not null,
     restaurant_id int not null,
+    available tinyint(1) not null default 1,
 
     constraint fk_restaurant_food
                    foreign key (restaurant_id)
@@ -249,3 +250,7 @@ create table if not exists restaurant_invite_codes (
 -- ALTER TABLE orders ADD COLUMN tip DECIMAL(10,2) DEFAULT 0 AFTER price;
 -- ALTER TABLE orders MODIFY COLUMN status ENUM('PENDING','CONFIRMED','READY','OUT_FOR_DELIVERY','DELIVERED','CANCELLED') DEFAULT 'PENDING';
 -- (chk_chef_required / chk_delivery_required recreated per the CREATE TABLE above)
+-- The ADMIN role was removed: any existing ADMIN users were reassigned to
+-- CUSTOMER (with a wallet created for them) before running:
+-- ALTER TABLE users MODIFY COLUMN role ENUM('CUSTOMER','CHEF','DELIVERY') DEFAULT 'CUSTOMER';
+-- ALTER TABLE food ADD COLUMN available TINYINT(1) NOT NULL DEFAULT 1 AFTER restaurant_id;

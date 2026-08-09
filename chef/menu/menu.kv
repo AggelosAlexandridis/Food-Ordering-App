@@ -1,0 +1,119 @@
+<ChefMenuScreen>:
+    canvas.before:
+        Color:
+            rgba: color_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [dp(20), dp(20), dp(20), dp(16)]
+        spacing: dp(12)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(12)
+
+            IconBtn:
+                text: "‹"
+                on_press: app.open_chef_dashboard()
+
+            TitleLabel:
+                text: "Menu"
+
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(12)
+
+                SubLabel:
+                    text: "Your dishes"
+                    size_hint_y: None
+                    height: dp(20)
+
+                RecycleView:
+                    id: rv
+                    viewclass: 'MenuItem'
+                    size_hint_y: None
+                    height: menu_box.height
+                    do_scroll_x: False
+                    do_scroll_y: False
+
+                    RecycleBoxLayout:
+                        id: menu_box
+                        default_size: None, dp(66)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(10)
+                        orientation: 'vertical'
+
+                Card:
+                    orientation: "vertical"
+                    padding: dp(20)
+                    spacing: dp(12)
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    SubLabel:
+                        text: "Add a dish"
+                        size_hint_y: None
+                        height: dp(20)
+
+                    FieldInput:
+                        id: name_input
+                        hint_text: "Dish name"
+
+                    FieldInput:
+                        id: price_input
+                        hint_text: "Price (€)"
+                        input_filter: 'float'
+
+                    Label:
+                        id: error_label
+                        text: ""
+                        color: color_danger
+                        font_size: 15
+                        bold: True
+                        size_hint_y: None
+                        height: self.texture_size[1] if self.text else 0
+
+                    ActionBtn:
+                        text: "Save Dish"
+                        btn_color: color_primary
+                        on_press: root.save_item()
+
+
+<MenuItem@MenuItemCard>:
+    accent: color_primary if root.available else color_text_soft
+    spacing: dp(10)
+
+    Label:
+        text: root.text if root.available else root.text + "  (unavailable)"
+        font_size: 16
+        bold: True
+        color: color_text if root.available else color_text_soft
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        padding: [dp(12), 0]
+
+    ActionBtn:
+        text: "Mark Unavailable" if root.available else "Mark Available"
+        btn_color: color_danger if root.available else color_success
+        size: dp(140), dp(40)
+        font_size: 12
+        on_press: app.toggle_food_item_availability(root.id)
+
+    DangerIconBtn:
+        text: "Remove"
+        size: dp(88), dp(40)
+        font_size: 13
+        on_press: app.confirm_delete_food_item(root.id, root.text)

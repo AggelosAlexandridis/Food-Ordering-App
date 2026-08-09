@@ -1,3 +1,6 @@
+from .passwords import hash_password, verify_password
+
+
 class Login:
     def __init__(self, conn):
         self.conn = conn
@@ -5,11 +8,19 @@ class Login:
     def check_login(self, username, password):
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT id, role FROM users WHERE (username=%s OR email=%s) AND password=%s",
-                (username, username, password),
+                "SELECT id, role, password FROM users WHERE username=%s OR email=%s",
+                (username, username),
             )
             res = cur.fetchone()
-        return [res[0], res[1]] if res else None
+
+        if not res:
+            return None
+
+        user_id, role, stored_password = res
+        if not verify_password(password, stored_password):
+            return None
+
+        return [user_id, role]
 
     def register(self, username, password, email, phone_number, role="CUSTOMER", restaurant_id=None):
         with self.conn.cursor() as cur:
@@ -32,7 +43,7 @@ class Login:
                     INSERT INTO users (username, password, email, phone_number, role, restaurant_id)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (username, password, email, phone_number, role, restaurant_id),
+                    (username, hash_password(password), email, phone_number, role, restaurant_id),
                 )
                 user_id = cur.lastrowid
                 cur.execute(

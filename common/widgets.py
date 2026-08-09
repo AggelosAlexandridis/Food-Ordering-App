@@ -24,6 +24,10 @@ class OrderListCard(ListCard):
     status = StringProperty("")
 
 
+class MenuItemCard(ListCard):
+    available = BooleanProperty(True)
+
+
 class TogglePill(Button):
     selected = BooleanProperty(False)
 
