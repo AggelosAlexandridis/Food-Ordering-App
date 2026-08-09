@@ -1,4 +1,4 @@
-from kivy.properties import BooleanProperty, ListProperty, StringProperty
+from kivy.properties import BooleanProperty, ListProperty, NumericProperty, StringProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -26,6 +26,7 @@ class OrderListCard(ListCard):
 
 class MenuItemCard(ListCard):
     available = BooleanProperty(True)
+    price = NumericProperty(0)
 
 
 class TogglePill(Button):

@@ -8,8 +8,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import SlideTransition
+from kivy.uix.textinput import TextInput
 
-from common.widgets import DANGER, ActionBtn, GhostBtn
+from common.widgets import DANGER, PRIMARY, ActionBtn, GhostBtn
 from db import DBManager
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -200,6 +201,84 @@ class MyApp(App):
         restaurant_id = self.db.users.get_restaurant_id(self.user_id)
         self.db.restaurants.toggle_food_availability(food_id, restaurant_id)
         self.root.get_screen("chef_menu").refresh_menu()
+
+    def open_edit_price_popup(self, food_id, current_price):
+        content = BoxLayout(orientation="vertical", padding=24, spacing=14)
+        with content.canvas.before:
+            Color(1, 1, 1, 1)
+            card = RoundedRectangle(pos=content.pos, size=content.size, radius=[18])
+        content.bind(
+            pos=lambda _, value: setattr(card, "pos", value),
+            size=lambda _, value: setattr(card, "size", value),
+        )
+
+        content.add_widget(Label(
+            text="Edit price",
+            color=(0.11, 0.11, 0.118, 1),
+            bold=True,
+            font_size="18sp",
+            size_hint_y=None,
+            height=28,
+        ))
+
+        price_input = TextInput(
+            text=f"{current_price:.2f}",
+            input_filter="float",
+            multiline=False,
+            font_size="16sp",
+            size_hint_y=None,
+            height=48,
+            padding=[16, 14, 16, 14],
+        )
+        content.add_widget(price_input)
+
+        error_label = Label(
+            text="",
+            color=DANGER,
+            bold=True,
+            font_size="14sp",
+            size_hint_y=None,
+            height=20,
+        )
+        content.add_widget(error_label)
+
+        buttons = BoxLayout(size_hint_y=None, height=50, spacing=12)
+        cancel_btn = GhostBtn(text="Cancel")
+        save_btn = ActionBtn(text="Save", btn_color=PRIMARY)
+        buttons.add_widget(cancel_btn)
+        buttons.add_widget(save_btn)
+        content.add_widget(buttons)
+
+        popup = Popup(
+            title="",
+            separator_height=0,
+            content=content,
+            size_hint=(None, None),
+            size=(360, 300),
+            auto_dismiss=False,
+            background_color=(0, 0, 0, 0),
+        )
+
+        def save(*_):
+            try:
+                price = float(price_input.text.strip())
+                if price <= 0:
+                    raise ValueError
+            except ValueError:
+                error_label.text = "Enter a valid price greater than 0."
+                return
+
+            restaurant_id = self.db.users.get_restaurant_id(self.user_id)
+            success = self.db.restaurants.update_food_price(food_id, restaurant_id, round(price, 2))
+            if success:
+                popup.dismiss()
+                self.root.get_screen("chef_menu").refresh_menu()
+            else:
+                error_label.text = "Error saving price."
+
+        cancel_btn.bind(on_release=popup.dismiss)
+        save_btn.bind(on_release=save)
+        popup.open()
 
     def open_delivery_dashboard(self):
         self.root.transition = SlideTransition(direction="right")

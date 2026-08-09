@@ -57,8 +57,8 @@ class TestRestaurantsUnit(unittest.TestCase):
         result = self.restaurants.get_full_menu(1)
 
         self.assertEqual(result, [
-            {"id": 10, "text": "Margherita: 8.5€", "available": True},
-            {"id": 11, "text": "Quattro Stagioni: 9.0€", "available": False},
+            {"id": 10, "text": "Margherita: 8.5€", "price": 8.5, "available": True},
+            {"id": 11, "text": "Quattro Stagioni: 9.0€", "price": 9.0, "available": False},
         ])
 
     def test_get_full_menu_does_not_filter_by_availability(self):

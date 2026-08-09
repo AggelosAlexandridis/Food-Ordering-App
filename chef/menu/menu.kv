@@ -106,6 +106,13 @@
         padding: [dp(12), 0]
 
     ActionBtn:
+        text: "Edit Price"
+        btn_color: color_primary
+        size: dp(100), dp(40)
+        font_size: 12
+        on_press: app.open_edit_price_popup(root.id, root.price)
+
+    ActionBtn:
         text: "Mark Unavailable" if root.available else "Mark Available"
         btn_color: color_danger if root.available else color_success
         size: dp(140), dp(40)

@@ -33,6 +33,7 @@ class Restaurants:
             {
                 "id": row[0],
                 "text": f"{row[1]}: {float(row[2])}€",
+                "price": float(row[2]),
                 "available": bool(row[3]),
             }
             for row in res
@@ -67,6 +68,25 @@ class Restaurants:
             return updated
         except Exception as e:
             print(f"Error toggling food availability: {e}")
+            self.conn.rollback()
+            return False
+
+    def update_food_price(self, food_id, restaurant_id, price):
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE food SET price = %s WHERE id = %s AND restaurant_id = %s",
+                    (price, food_id, restaurant_id),
+                )
+                updated = cur.rowcount == 1
+
+            if updated:
+                self.conn.commit()
+            else:
+                self.conn.rollback()
+            return updated
+        except Exception as e:
+            print(f"Error updating food price: {e}")
             self.conn.rollback()
             return False
 
