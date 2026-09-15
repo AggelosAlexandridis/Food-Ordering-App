@@ -4,9 +4,8 @@ class Restaurants:
 
     def get_restaurants(self):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT * FROM restaurants")
-            res = cur.fetchall()
-        return [{"id": row[0], "text": row[1]} for row in res]
+            cur.execute("SELECT id, name FROM restaurants")
+            return cur.fetchall()
 
     def get_restaurant(self, restaurant_id):
         with self.conn.cursor() as cur:
@@ -17,10 +16,10 @@ class Restaurants:
     def get_menu(self, restaurant_id):
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM food WHERE restaurant_id=%s AND available=1", (restaurant_id,)
+                "SELECT id, name, price FROM food WHERE restaurant_id=%s AND available=1",
+                (restaurant_id,),
             )
-            res = cur.fetchall()
-        return [{"id": row[0], "text": f"{row[1]}: {float(row[2])}€"} for row in res]
+            return cur.fetchall()
 
     def get_full_menu(self, restaurant_id):
         with self.conn.cursor() as cur:
@@ -28,16 +27,7 @@ class Restaurants:
                 "SELECT id, name, price, available FROM food WHERE restaurant_id=%s",
                 (restaurant_id,),
             )
-            res = cur.fetchall()
-        return [
-            {
-                "id": row[0],
-                "text": f"{row[1]}: {float(row[2])}€",
-                "price": float(row[2]),
-                "available": bool(row[3]),
-            }
-            for row in res
-        ]
+            return cur.fetchall()
 
     def get_items_by_ids(self, food_ids):
         if not food_ids:
@@ -49,8 +39,7 @@ class Restaurants:
                 f"SELECT id, name, available FROM food WHERE id IN ({placeholders})",
                 food_ids,
             )
-            res = cur.fetchall()
-        return [{"id": row[0], "name": row[1], "available": bool(row[2])} for row in res]
+            return cur.fetchall()
 
     def toggle_food_availability(self, food_id, restaurant_id):
         try:

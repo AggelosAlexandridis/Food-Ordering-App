@@ -2,10 +2,12 @@ import unittest
 
 import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
+from services import ServiceManager
 
 class TestWalletAndCart(unittest.TestCase):
     def setUp(self):
         self.db = DBManager()
+        self.services = ServiceManager(self.db)
         cur = self.db.conn.cursor()
         
         cur.execute("DELETE FROM users WHERE username IN ('wallet_test_user', 'wallet_upd_user')")
@@ -54,7 +56,7 @@ class TestWalletAndCart(unittest.TestCase):
         self.assertEqual(new_balance, 50.0)
 
     def test_get_cart_items_empty_cart(self):
-        result = self.db.orders.get_cart_items([])
+        result = self.services.orders.get_cart_items([])
         self.assertEqual(result, [])
 
     def test_get_cart_items_calculates_total_correctly(self):
@@ -69,7 +71,7 @@ class TestWalletAndCart(unittest.TestCase):
         cur.close()
 
         cart = [{"id": food_id, "quantity": 3}]
-        result = self.db.orders.get_cart_items(cart)
+        result = self.services.orders.get_cart_items(cart)
 
         self.assertEqual(len(result), 1)
         self.assertIn("x3", result[0]["text"])

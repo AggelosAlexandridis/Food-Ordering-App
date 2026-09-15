@@ -18,4 +18,4 @@ class RestaurantScreen(Screen):
 
     def refresh(self):
         app = App.get_running_app()
-        self.ids.rv.data = app.db.restaurants.get_menu(app.selected_restaurant_id)
+        self.ids.rv.data = app.services.restaurants.get_menu(app.selected_restaurant_id)

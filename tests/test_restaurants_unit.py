@@ -12,27 +12,24 @@ class TestRestaurantsUnit(unittest.TestCase):
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.restaurants = Restaurants(self.conn)
 
-    def test_get_restaurants_maps_id_and_name(self):
+    def test_get_restaurants_returns_raw_rows(self):
         self.cursor.fetchall.return_value = [(1, "Pizza Place"), (2, "Sushi Bar")]
 
         result = self.restaurants.get_restaurants()
 
-        self.assertEqual(result, [
-            {"id": 1, "text": "Pizza Place"},
-            {"id": 2, "text": "Sushi Bar"},
-        ])
+        self.assertEqual(result, [(1, "Pizza Place"), (2, "Sushi Bar")])
 
     def test_get_restaurants_empty(self):
         self.cursor.fetchall.return_value = []
 
         self.assertEqual(self.restaurants.get_restaurants(), [])
 
-    def test_get_menu_formats_name_and_price(self):
-        self.cursor.fetchall.return_value = [(10, "Margherita", 8.5, 1)]
+    def test_get_menu_returns_raw_rows(self):
+        self.cursor.fetchall.return_value = [(10, "Margherita", 8.5)]
 
         result = self.restaurants.get_menu(1)
 
-        self.assertEqual(result, [{"id": 10, "text": "Margherita: 8.5€"}])
+        self.assertEqual(result, [(10, "Margherita", 8.5)])
 
     def test_get_menu_filters_by_restaurant_id_and_availability(self):
         self.cursor.fetchall.return_value = []
@@ -48,7 +45,7 @@ class TestRestaurantsUnit(unittest.TestCase):
 
         self.assertEqual(self.restaurants.get_menu(999999), [])
 
-    def test_get_full_menu_includes_unavailable_items_with_flag(self):
+    def test_get_full_menu_returns_raw_rows_including_unavailable(self):
         self.cursor.fetchall.return_value = [
             (10, "Margherita", 8.5, 1),
             (11, "Quattro Stagioni", 9.0, 0),
@@ -57,8 +54,8 @@ class TestRestaurantsUnit(unittest.TestCase):
         result = self.restaurants.get_full_menu(1)
 
         self.assertEqual(result, [
-            {"id": 10, "text": "Margherita: 8.5€", "price": 8.5, "available": True},
-            {"id": 11, "text": "Quattro Stagioni: 9.0€", "price": 9.0, "available": False},
+            (10, "Margherita", 8.5, 1),
+            (11, "Quattro Stagioni", 9.0, 0),
         ])
 
     def test_get_full_menu_does_not_filter_by_availability(self):
@@ -71,15 +68,12 @@ class TestRestaurantsUnit(unittest.TestCase):
         self.assertIn("WHERE restaurant_id=%s", query)
         self.assertEqual(params, (42,))
 
-    def test_get_items_by_ids_maps_availability(self):
+    def test_get_items_by_ids_returns_raw_rows(self):
         self.cursor.fetchall.return_value = [(10, "Margherita", 1), (11, "Calzone", 0)]
 
         result = self.restaurants.get_items_by_ids([10, 11])
 
-        self.assertEqual(result, [
-            {"id": 10, "name": "Margherita", "available": True},
-            {"id": 11, "name": "Calzone", "available": False},
-        ])
+        self.assertEqual(result, [(10, "Margherita", 1), (11, "Calzone", 0)])
         query, params = self.cursor.execute.call_args.args
         self.assertIn("WHERE id IN (%s,%s)", query)
         self.assertEqual(params, [10, 11])
@@ -135,6 +129,25 @@ class TestRestaurantsUnit(unittest.TestCase):
         self.assertFalse(result)
         self.conn.rollback.assert_called_once()
         self.conn.commit.assert_not_called()
+
+    def test_update_food_price_scopes_by_restaurant_and_commits(self):
+        self.cursor.rowcount = 1
+
+        result = self.restaurants.update_food_price(10, restaurant_id=1, price=9.5)
+
+        self.assertTrue(result)
+        query, params = self.cursor.execute.call_args.args
+        self.assertIn("WHERE id = %s AND restaurant_id = %s", query)
+        self.assertEqual(params, (9.5, 10, 1))
+        self.conn.commit.assert_called_once()
+
+    def test_update_food_price_not_found_rolls_back(self):
+        self.cursor.rowcount = 0
+
+        result = self.restaurants.update_food_price(10, restaurant_id=1, price=9.5)
+
+        self.assertFalse(result)
+        self.conn.rollback.assert_called_once()
 
     def test_delete_food_item_scopes_by_restaurant_and_commits(self):
         self.cursor.rowcount = 1

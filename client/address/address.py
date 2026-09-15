@@ -8,5 +8,5 @@ class AddressScreen(Screen):
 
     def refresh_addresses(self):
         app = App.get_running_app()
-        app.cached_addresses = app.db.addresses.get_addresses(app.user_id)
+        app.cached_addresses = app.services.addresses.list_addresses(app.user_id)
         self.ids.rv.data = app.cached_addresses

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from db.delivery import Delivery
 
@@ -10,103 +10,100 @@ class TestGetRestaurantsForDeliveryUnit(unittest.TestCase):
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.delivery = Delivery(self.conn)
 
-    def test_maps_id_and_name(self):
+    def test_returns_raw_rows(self):
         self.cursor.fetchall.return_value = [(1, "Pizzaria"), (2, "Souvlatzidiko")]
 
         result = self.delivery.get_restaurants_for_delivery(9)
 
-        self.assertEqual(result, [
-            {"id": 1, "text": "Pizzaria"},
-            {"id": 2, "text": "Souvlatzidiko"},
-        ])
+        self.assertEqual(result, [(1, "Pizzaria"), (2, "Souvlatzidiko")])
 
 
-class TestGenerateInviteCodeUnit(unittest.TestCase):
+class TestCreateInviteCodeUnit(unittest.TestCase):
     def setUp(self):
         self.conn = MagicMock()
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.delivery = Delivery(self.conn)
 
-    @patch("db.delivery.generate_code", return_value="ABC12345")
-    def test_returns_generated_code_and_commits(self, _mock_gen):
-        code = self.delivery.generate_invite_code(1, 5)
+    def test_commits_and_returns_true(self):
+        result = self.delivery.create_invite_code(1, "ABC12345", 5)
 
-        self.assertEqual(code, "ABC12345")
+        self.assertTrue(result)
         self.conn.commit.assert_called_once()
+        query, params = self.cursor.execute.call_args.args
+        self.assertIn("INSERT INTO restaurant_invite_codes", query)
+        self.assertEqual(params, (1, "ABC12345", 5))
 
-    def test_db_error_rolls_back_and_returns_none(self):
+    def test_db_error_rolls_back_and_returns_false(self):
         self.cursor.execute.side_effect = Exception("boom")
 
-        code = self.delivery.generate_invite_code(1, 5)
+        result = self.delivery.create_invite_code(1, "ABC12345", 5)
 
-        self.assertIsNone(code)
+        self.assertFalse(result)
         self.conn.rollback.assert_called_once()
 
 
-class TestRedeemInviteCodeUnit(unittest.TestCase):
+class TestFindInviteCodeUnit(unittest.TestCase):
     def setUp(self):
         self.conn = MagicMock()
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.delivery = Delivery(self.conn)
 
-    def test_unknown_code_returns_not_found_error(self):
+    def test_returns_row_when_found(self):
+        self.cursor.fetchone.return_value = (1, 7, None)
+
+        self.assertEqual(self.delivery.find_invite_code("GOODCODE"), (1, 7, None))
+
+    def test_returns_none_when_missing(self):
         self.cursor.fetchone.return_value = None
 
-        restaurant_id, error = self.delivery.redeem_invite_code("BADCODE", 9)
+        self.assertIsNone(self.delivery.find_invite_code("BADCODE"))
 
-        self.assertIsNone(restaurant_id)
-        self.assertIn("doesn't exist", error)
-        self.conn.commit.assert_not_called()
 
-    def test_already_used_code_returns_distinct_error(self):
-        # id=1, restaurant_id=7, used_by=99 (already redeemed by someone else)
-        self.cursor.fetchone.return_value = (1, 7, 99)
+class TestIsDeliveryLinkedUnit(unittest.TestCase):
+    def setUp(self):
+        self.conn = MagicMock()
+        self.cursor = self.conn.cursor.return_value.__enter__.return_value
+        self.delivery = Delivery(self.conn)
 
-        restaurant_id, error = self.delivery.redeem_invite_code("GOODCODE", 9)
+    def test_true_when_linked(self):
+        self.cursor.fetchone.return_value = (1,)
+        self.assertTrue(self.delivery.is_delivery_linked(9, 7))
 
-        self.assertIsNone(restaurant_id)
-        self.assertIn("already been used", error)
-        self.conn.commit.assert_not_called()
+    def test_false_when_not_linked(self):
+        self.cursor.fetchone.return_value = None
+        self.assertFalse(self.delivery.is_delivery_linked(9, 7))
 
-    def test_already_registered_returns_error_without_writing(self):
-        # first lookup: code found, unused; second: already-linked check finds a row
-        self.cursor.fetchone.side_effect = [(1, 7, None), (1,)]
 
-        restaurant_id, error = self.delivery.redeem_invite_code("GOODCODE", 9)
-
-        self.assertIsNone(restaurant_id)
-        self.assertIn("already registered", error)
-        self.conn.commit.assert_not_called()
+class TestRedeemInviteCodeAtomicUnit(unittest.TestCase):
+    def setUp(self):
+        self.conn = MagicMock()
+        self.cursor = self.conn.cursor.return_value.__enter__.return_value
+        self.delivery = Delivery(self.conn)
 
     def test_successful_redemption_links_and_commits(self):
-        self.cursor.fetchone.side_effect = [(1, 7, None), None]  # found+unused, not yet linked
-        self.cursor.rowcount = 1  # the used_by UPDATE matched a row
+        self.cursor.rowcount = 1
 
-        restaurant_id, error = self.delivery.redeem_invite_code("goodcode", 9)
+        result = self.delivery.redeem_invite_code_atomic(1, 7, 9)
 
-        self.assertEqual(restaurant_id, 7)
-        self.assertIsNone(error)
+        self.assertTrue(result)
         self.conn.commit.assert_called_once()
 
-    def test_code_is_normalized_to_uppercase_and_stripped(self):
-        self.cursor.fetchone.return_value = None
-
-        self.delivery.redeem_invite_code("  abc123  ", 9)
-
-        query, params = self.cursor.execute.call_args.args
-        self.assertEqual(params, ("ABC123",))
-
-    def test_race_where_code_used_between_lookup_and_update_rolls_back(self):
-        # code found and not-yet-linked at check time, but the guarded UPDATE
-        # matches zero rows because another request won the race first
-        self.cursor.fetchone.side_effect = [(1, 7, None), None]
+    def test_race_lost_rolls_back_and_returns_false(self):
         self.cursor.rowcount = 0
 
-        restaurant_id, error = self.delivery.redeem_invite_code("GOODCODE", 9)
+        result = self.delivery.redeem_invite_code_atomic(1, 7, 9)
 
-        self.assertIsNone(restaurant_id)
-        self.assertIn("just used by someone else", error)
+        self.assertFalse(result)
+        self.conn.rollback.assert_called_once()
         self.conn.commit.assert_not_called()
+
+    def test_db_error_rolls_back_and_returns_false(self):
+        self.cursor.execute.side_effect = Exception("boom")
+
+        result = self.delivery.redeem_invite_code_atomic(1, 7, 9)
+
+        self.assertFalse(result)
+        self.conn.rollback.assert_called_once()
 
 
 if __name__ == "__main__":

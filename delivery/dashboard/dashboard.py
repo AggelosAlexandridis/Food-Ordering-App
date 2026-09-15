@@ -18,9 +18,9 @@ class DeliveryDashboardScreen(Screen):
 
     def refresh(self):
         app = App.get_running_app()
-        restaurants = app.db.delivery.get_restaurants_for_delivery(app.user_id)
+        restaurants = app.services.delivery.list_restaurants_for_delivery(app.user_id)
         restaurant_ids = [r["id"] for r in restaurants]
-        ready_orders = app.db.orders.get_ready_orders_for_restaurants(restaurant_ids)
+        ready_orders = app.services.orders.list_ready_orders(restaurant_ids)
 
         counts = {}
         for order in ready_orders:

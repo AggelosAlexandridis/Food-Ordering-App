@@ -13,17 +13,14 @@ class TestCardsUnit(unittest.TestCase):
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.cards = Cards(self.conn)
 
-    def test_get_cards_formats_masked_display_text(self):
+    def test_get_cards_returns_raw_rows(self):
         self.cursor.fetchall.return_value = [
             (1, "1234567812345678", "Alice Doe", date(2027, 5, 1), "VISA"),
         ]
 
         result = self.cards.get_cards(1)
 
-        self.assertEqual(len(result), 1)
-        card = result[0]
-        self.assertEqual(card["card_number"], "1234567812345678")
-        self.assertEqual(card["text"], "Visa •••• 5678  ·  exp 05/27")
+        self.assertEqual(result, [(1, "1234567812345678", "Alice Doe", date(2027, 5, 1), "VISA")])
 
     def test_get_cards_empty(self):
         self.cursor.fetchall.return_value = []

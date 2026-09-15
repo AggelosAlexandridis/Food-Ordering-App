@@ -8,4 +8,4 @@ class DeliveryActiveScreen(Screen):
 
     def refresh(self):
         app = App.get_running_app()
-        self.ids.rv.data = app.db.orders.get_delivery_orders(app.user_id)
+        self.ids.rv.data = app.services.orders.list_active_deliveries(app.user_id)

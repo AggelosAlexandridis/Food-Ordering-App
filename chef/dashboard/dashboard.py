@@ -17,9 +17,9 @@ class ChefDashboardScreen(Screen):
 
     def on_enter(self):
         app = App.get_running_app()
-        self.restaurant_id = app.db.users.get_restaurant_id(app.user_id)
+        self.restaurant_id = app.services.users.get_restaurant_id(app.user_id)
 
-        restaurant = app.db.restaurants.get_restaurant(self.restaurant_id) if self.restaurant_id else None
+        restaurant = app.services.restaurants.get_restaurant(self.restaurant_id) if self.restaurant_id else None
         self.ids.restaurant_label.text = restaurant["name"] if restaurant else "Your restaurant"
 
         self._known_pending_ids = None
@@ -39,7 +39,7 @@ class ChefDashboardScreen(Screen):
         if not self.restaurant_id:
             return
 
-        orders = app.db.orders.get_restaurant_orders(self.restaurant_id)
+        orders = app.services.orders.list_restaurant_orders(self.restaurant_id)
         self.ids.rv.data = orders
 
         pending_count = sum(1 for o in orders if o["status"] == "PENDING")
@@ -61,7 +61,7 @@ class ChefDashboardScreen(Screen):
 
     def open_invite_code_popup(self):
         app = App.get_running_app()
-        code = app.db.delivery.generate_invite_code(self.restaurant_id, app.user_id)
+        code = app.services.delivery.generate_invite_code(self.restaurant_id, app.user_id)
 
         content = BoxLayout(orientation="vertical", padding=24, spacing=14)
         with content.canvas.before:

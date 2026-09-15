@@ -12,22 +12,27 @@ class TestUsersUnit(unittest.TestCase):
         self.cursor = self.conn.cursor.return_value.__enter__.return_value
         self.users = Users(self.conn)
 
-    def test_get_profile_returns_dict(self):
+    def test_get_profile_row_returns_raw_tuple(self):
         self.cursor.fetchone.return_value = ("alice", "Alice Doe", "alice@test.com", "1234567890")
 
-        result = self.users.get_profile(1)
+        result = self.users.get_profile_row(1)
 
-        self.assertEqual(result, {
-            "username": "alice",
-            "name": "Alice Doe",
-            "email": "alice@test.com",
-            "phone_number": "1234567890",
-        })
+        self.assertEqual(result, ("alice", "Alice Doe", "alice@test.com", "1234567890"))
 
-    def test_get_profile_returns_none_when_missing(self):
+    def test_get_profile_row_returns_none_when_missing(self):
         self.cursor.fetchone.return_value = None
 
-        self.assertIsNone(self.users.get_profile(999999))
+        self.assertIsNone(self.users.get_profile_row(999999))
+
+    def test_get_restaurant_id(self):
+        self.cursor.fetchone.return_value = (3,)
+
+        self.assertEqual(self.users.get_restaurant_id(1), 3)
+
+    def test_get_restaurant_id_missing_user(self):
+        self.cursor.fetchone.return_value = None
+
+        self.assertIsNone(self.users.get_restaurant_id(999999))
 
     def test_update_name_commits_and_returns_true(self):
         result = self.users.update_name(1, "New Name")

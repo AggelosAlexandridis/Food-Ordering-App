@@ -2,17 +2,13 @@ class Users:
     def __init__(self, conn):
         self.conn = conn
 
-    def get_profile(self, user_id):
+    def get_profile_row(self, user_id):
         with self.conn.cursor() as cur:
             cur.execute(
                 "SELECT username, name, email, phone_number FROM users WHERE id = %s",
                 (user_id,),
             )
-            row = cur.fetchone()
-
-        if not row:
-            return None
-        return {"username": row[0], "name": row[1], "email": row[2], "phone_number": row[3]}
+            return cur.fetchone()
 
     def get_restaurant_id(self, user_id):
         with self.conn.cursor() as cur:

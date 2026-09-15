@@ -11,19 +11,7 @@ class Cards:
                 """,
                 (user_id,),
             )
-            res = cur.fetchall()
-
-        return [
-            {
-                "id": row[0],
-                "card_number": row[1],
-                "card_holder_name": row[2],
-                "expiration_date": row[3],
-                "type": row[4],
-                "text": f"{row[4].title()} •••• {row[1][-4:]}  ·  exp {row[3].strftime('%m/%y')}",
-            }
-            for row in res
-        ]
+            return cur.fetchall()
 
     def add_card(self, user_id, card_number, cvv, card_holder_name, expiration_date, card_type):
         try:

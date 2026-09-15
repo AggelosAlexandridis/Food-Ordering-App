@@ -8,7 +8,7 @@ class DeliveryProfileScreen(Screen):
         self.ids.code_input.text = ""
         self.ids.msg_label.text = ""
 
-        income = app.db.orders.get_delivery_income(app.user_id)
+        income = app.services.orders.get_delivery_income(app.user_id)
         self.ids.income_label.text = f"{income['total']:.2f}€"
         self.ids.income_detail.text = (
             f"{income['deliveries']} deliveries · "

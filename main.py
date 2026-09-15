@@ -1,5 +1,3 @@
-import re
-
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import StringProperty
@@ -12,8 +10,7 @@ from kivy.uix.textinput import TextInput
 
 from common.widgets import DANGER, PRIMARY, ActionBtn, GhostBtn
 from db import DBManager
-
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+from services import ServiceManager
 
 # Unused directly, but importing these modules defines their Screen
 # subclasses so Kivy can resolve them when common/root.kv is built.
@@ -56,6 +53,7 @@ class MyApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.db = DBManager()
+        self.services = ServiceManager(self.db)
 
     def build(self):
         Builder.load_file("common/theme.kv")
@@ -86,7 +84,7 @@ class MyApp(App):
         username = login_screen.ids.username_input.text
         password = login_screen.ids.password_input.text
 
-        cl = self.db.login.check_login(username, password)
+        cl = self.services.auth.login(username, password)
 
         if not cl:
             print("Invalid credentials")
@@ -119,23 +117,7 @@ class MyApp(App):
         password = register_screen.ids.password_input.text
         confirm = register_screen.ids.confirm_input.text
 
-        if not username or not email or not phone or not password:
-            register_screen.ids.error_label.text = "Please fill in all fields."
-            return
-
-        if not EMAIL_RE.match(email):
-            register_screen.ids.error_label.text = "Enter a valid email address."
-            return
-
-        if len(password) < 6:
-            register_screen.ids.error_label.text = "Password must be at least 6 characters."
-            return
-
-        if password != confirm:
-            register_screen.ids.error_label.text = "Passwords do not match."
-            return
-
-        user_id, error = self.db.login.register(username, password, email, phone)
+        user_id, error = self.services.auth.register(username, password, confirm, email, phone)
         if error:
             register_screen.ids.error_label.text = error
             return
@@ -162,18 +144,18 @@ class MyApp(App):
         self.root.current = "login"
 
     def confirm_order(self, order_id):
-        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-        self.db.orders.confirm_order(order_id, restaurant_id, self.user_id)
+        restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+        self.services.orders.confirm_order(order_id, restaurant_id, self.user_id)
         self.root.get_screen("chef_dashboard").refresh()
 
     def mark_order_ready(self, order_id):
-        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-        self.db.orders.mark_order_ready(order_id, restaurant_id, self.user_id)
+        restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+        self.services.orders.mark_order_ready(order_id, restaurant_id, self.user_id)
         self.root.get_screen("chef_dashboard").refresh()
 
     def cancel_order_by_chef(self, order_id):
-        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-        self.db.orders.cancel_order_by_chef(order_id, restaurant_id, self.user_id)
+        restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+        self.services.orders.cancel_order_by_chef(order_id, restaurant_id, self.user_id)
         self.root.get_screen("chef_dashboard").refresh()
 
     def open_chef_dashboard(self):
@@ -193,13 +175,13 @@ class MyApp(App):
         )
 
     def delete_food_item(self, food_id):
-        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-        self.db.restaurants.delete_food_item(food_id, restaurant_id)
+        restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+        self.services.restaurants.delete_food_item(food_id, restaurant_id)
         self.root.get_screen("chef_menu").refresh_menu()
 
     def toggle_food_item_availability(self, food_id):
-        restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-        self.db.restaurants.toggle_food_availability(food_id, restaurant_id)
+        restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+        self.services.restaurants.toggle_food_availability(food_id, restaurant_id)
         self.root.get_screen("chef_menu").refresh_menu()
 
     def open_edit_price_popup(self, food_id, current_price):
@@ -260,21 +242,15 @@ class MyApp(App):
         )
 
         def save(*_):
-            try:
-                price = float(price_input.text.strip())
-                if price <= 0:
-                    raise ValueError
-            except ValueError:
-                error_label.text = "Enter a valid price greater than 0."
-                return
-
-            restaurant_id = self.db.users.get_restaurant_id(self.user_id)
-            success = self.db.restaurants.update_food_price(food_id, restaurant_id, round(price, 2))
+            restaurant_id = self.services.users.get_restaurant_id(self.user_id)
+            success, error = self.services.restaurants.update_food_price(
+                food_id, restaurant_id, price_input.text
+            )
             if success:
                 popup.dismiss()
                 self.root.get_screen("chef_menu").refresh_menu()
             else:
-                error_label.text = "Error saving price."
+                error_label.text = error
 
         cancel_btn.bind(on_release=popup.dismiss)
         save_btn.bind(on_release=save)
@@ -300,13 +276,13 @@ class MyApp(App):
 
     def claim_order(self, order_id):
         orders_screen = self.root.get_screen("delivery_orders")
-        success = self.db.orders.claim_order_for_delivery(order_id, self.user_id)
+        success = self.services.orders.claim_order(order_id, self.user_id)
         orders_screen.refresh()
         if not success:
             orders_screen.ids.error_label.text = "Someone else already claimed that order."
 
     def complete_delivery(self, order_id):
-        self.db.orders.mark_order_delivered(order_id, self.user_id)
+        self.services.orders.complete_delivery(order_id, self.user_id)
         self.root.get_screen("delivery_active").refresh()
 
     def confirm_cancel_delivery(self, order_id, order_text):
@@ -317,19 +293,13 @@ class MyApp(App):
         )
 
     def cancel_delivery(self, order_id):
-        self.db.orders.cancel_order_by_delivery(order_id, self.user_id)
+        self.services.orders.cancel_delivery(order_id, self.user_id)
         self.root.get_screen("delivery_active").refresh()
 
     def redeem_restaurant_code(self, code_text):
         profile_screen = self.root.get_screen("delivery_profile")
 
-        clean_code = code_text.strip()
-        if not clean_code:
-            profile_screen.ids.msg_label.color = (0.9, 0.2, 0.2, 1)
-            profile_screen.ids.msg_label.text = "Enter a code first."
-            return
-
-        restaurant_id, error = self.db.delivery.redeem_invite_code(clean_code, self.user_id)
+        restaurant_id, error = self.services.delivery.redeem_invite_code(code_text, self.user_id)
         if error:
             profile_screen.ids.msg_label.color = (0.9, 0.2, 0.2, 1)
             profile_screen.ids.msg_label.text = error
@@ -381,7 +351,7 @@ class MyApp(App):
 
     def _refresh_cart_view(self):
         cart_screen = self.root.get_screen("cart")
-        data = self.db.orders.get_cart_items(self.cart)
+        data = self.services.orders.get_cart_items(self.cart)
         total_price = sum(float(item["price"]) for item in data)
 
         cart_screen.ids.rv.data = data
@@ -404,19 +374,14 @@ class MyApp(App):
 
     def save_new_address(self, text_content):
         address_screen = self.root.get_screen("address")
-        clean_text = text_content.strip()
 
-        if not clean_text:
-            address_screen.ids.error_label.text = "Address field cannot be empty!"
-            return
-
-        success = self.db.addresses.add_address(self.user_id, clean_text)
+        success, error = self.services.addresses.add_address(self.user_id, text_content)
         if success:
             address_screen.ids.address_input.text = ""
             address_screen.ids.error_label.text = ""
             address_screen.refresh_addresses()
         else:
-            address_screen.ids.error_label.text = "Error saving location profile to database."
+            address_screen.ids.error_label.text = error
 
     def _confirm_action(self, title, message, on_confirm, confirm_label="Remove"):
         content = BoxLayout(orientation="vertical", padding=24, spacing=14)
@@ -514,7 +479,7 @@ class MyApp(App):
         )
 
     def delete_address(self, address_id):
-        success, error = self.db.addresses.delete_address(self.user_id, address_id)
+        success, error = self.services.addresses.delete_address(self.user_id, address_id)
 
         if not success:
             self._show_alert("Can't delete address", error or "Error deleting address. Please try again.")
@@ -534,7 +499,7 @@ class MyApp(App):
         )
 
     def delete_card(self, card_id):
-        success = self.db.cards.delete_card(self.user_id, card_id)
+        success = self.services.cards.delete_card(self.user_id, card_id)
         if not success:
             return
 
@@ -553,7 +518,7 @@ class MyApp(App):
         )
 
     def delete_order(self, order_id):
-        self.db.orders.cancel_order_by_customer(order_id, self.user_id)
+        self.services.orders.cancel_order(order_id, self.user_id)
         self.root.get_screen("orders").refresh_orders()
 
     def on_address_selected(self, chosen_text):
@@ -578,14 +543,11 @@ class MyApp(App):
     def on_checkout(self):
         cart_screen = self.root.get_screen("cart")
 
-        cart_food_ids = [item["id"] for item in self.cart]
-        food_items = self.db.restaurants.get_items_by_ids(cart_food_ids)
-        unavailable_names = [item["name"] for item in food_items if not item["available"]]
-
-        if unavailable_names:
-            for item in food_items:
-                if not item["available"]:
-                    self.remove_cart_item(item["id"])
+        unavailable = self.services.restaurants.find_unavailable_cart_items(self.cart)
+        if unavailable:
+            for item in unavailable:
+                self.remove_cart_item(item["id"])
+            unavailable_names = [item["name"] for item in unavailable]
             self._show_alert(
                 "Items no longer available",
                 "These items are no longer available and were removed from your cart: "
@@ -599,38 +561,18 @@ class MyApp(App):
 
         notes = cart_screen.ids.notes_input.text.strip() or None
         tip = cart_screen.get_tip_amount()
-        total_with_tip = self.cart_total_price + tip
 
-        if self.selected_payment_method == "CARD":
-            if self.selected_card_id is None:
-                self._show_alert("Card required", "Please select a card to pay with before placing your order.")
-                return
+        if self.selected_payment_method == "CARD" and self.selected_card_id is None:
+            self._show_alert("Card required", "Please select a card to pay with before placing your order.")
+            return
 
-            balance = self.db.wallet.get_balance(self.user_id)
-
-            if balance is None:
-                cart_screen.ids.error_label.text = "Error: Wallet not found."
-                return
-
-            if balance < total_with_tip:
-                cart_screen.ids.error_label.text = f"Insufficient funds! You need {total_with_tip - balance:.2f}€ more."
-                return
-
-            order_success = self.db.orders.submit_order(
-                self.user_id, self.selected_address_id, self.cart_total_price, "CARD", notes,
-                restaurant_id=self.selected_restaurant_id, tip=tip,
-            )
-
-            if order_success:
-                self.db.wallet.update_balance(self.user_id, balance - total_with_tip)
-        else:
-            order_success = self.db.orders.submit_order(
-                self.user_id, self.selected_address_id, self.cart_total_price, "CASH", notes,
-                restaurant_id=self.selected_restaurant_id, tip=tip,
-            )
+        order_success, error = self.services.orders.checkout(
+            self.user_id, self.selected_restaurant_id, self.selected_address_id,
+            self.selected_payment_method, self.cart_total_price, tip, notes,
+        )
 
         if not order_success:
-            cart_screen.ids.error_label.text = "Checkout Error: Failed processing orders record."
+            cart_screen.ids.error_label.text = error
             return
 
         self.cart = []
@@ -674,20 +616,14 @@ class MyApp(App):
 
     def save_profile_name(self, name_text):
         profile_screen = self.root.get_screen("profile")
-        clean_name = name_text.strip()
 
-        if not clean_name:
-            profile_screen.ids.msg_label.color = (0.9, 0.2, 0.2, 1)
-            profile_screen.ids.msg_label.text = "Name cannot be empty."
-            return
-
-        success = self.db.users.update_name(self.user_id, clean_name)
+        success, error = self.services.users.update_name(self.user_id, name_text)
         if success:
             profile_screen.ids.msg_label.color = (0.1, 0.7, 0.3, 1)
             profile_screen.ids.msg_label.text = "Name updated!"
         else:
             profile_screen.ids.msg_label.color = (0.9, 0.2, 0.2, 1)
-            profile_screen.ids.msg_label.text = "Error saving name."
+            profile_screen.ids.msg_label.text = error
 
     def show_wallet(self):
         self.root.transition = SlideTransition(direction="left")
@@ -696,19 +632,11 @@ class MyApp(App):
     def add_funds(self, amount_text):
         wallet_screen = self.root.get_screen("wallet")
 
-        try:
-            amount = float(amount_text)
-            if amount <= 0:
-                raise ValueError
-        except ValueError:
+        success, amount, new_balance, error = self.services.wallet.add_funds(self.user_id, amount_text)
+        if not success:
             wallet_screen.ids.msg_label.color = (0.9, 0.2, 0.2, 1)
-            wallet_screen.ids.msg_label.text = "Please enter a valid positive amount."
+            wallet_screen.ids.msg_label.text = error
             return
-
-        current_balance = self.db.wallet.get_balance(self.user_id)
-        new_balance = current_balance + amount
-
-        self.db.wallet.update_balance(self.user_id, new_balance)
 
         wallet_screen.ids.balance_label.text = f"{new_balance:.2f}€"
         wallet_screen.ids.amount_input.text = ""

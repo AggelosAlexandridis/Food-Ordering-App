@@ -2,21 +2,23 @@ import unittest
 
 import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
+from services import ServiceManager
 
 class TestAuthAndCatalog(unittest.TestCase):
     def setUp(self):
         self.db = DBManager()
+        self.services = ServiceManager(self.db)
         self.db.conn.autocommit = False  
 
     def tearDown(self):
         self.db.conn.rollback()
         self.db.close()
 
-    def test_check_login_invalid_credentials_returns_none(self):
-        result = self.db.login.check_login("fake_user_99", "wrongpass")
+    def test_login_invalid_credentials_returns_none(self):
+        result = self.services.auth.login("fake_user_99", "wrongpass")
         self.assertIsNone(result)
 
-    def test_check_login_valid_user(self):
+    def test_login_valid_user(self):
         cur = self.db.conn.cursor()
         cur.execute(
             "INSERT INTO users (username, password, role, email, phone_number) VALUES (%s, %s, %s, %s, %s)",
@@ -24,19 +26,19 @@ class TestAuthAndCatalog(unittest.TestCase):
         )
         cur.close()
 
-        result = self.db.login.check_login("auth_test_user", "test_pass")
+        result = self.services.auth.login("auth_test_user", "test_pass")
         self.assertIsNotNone(result)
         self.assertEqual(result[1].upper(), "CUSTOMER")
 
-    def test_get_restaurants_returns_list(self):
-        result = self.db.restaurants.get_restaurants()
+    def test_list_restaurants_returns_list(self):
+        result = self.services.restaurants.list_restaurants()
         self.assertIsInstance(result, list)
         if result:
             self.assertIn("id", result[0])
             self.assertIn("text", result[0])
 
     def test_get_menu_for_nonexistent_restaurant_returns_empty(self):
-        result = self.db.restaurants.get_menu(999999)
+        result = self.services.restaurants.get_menu(999999)
         self.assertEqual(result, [])
 
     def test_get_menu_returns_items(self):
@@ -49,7 +51,7 @@ class TestAuthAndCatalog(unittest.TestCase):
         )
         cur.close()
 
-        result = self.db.restaurants.get_menu(rest_id)
+        result = self.services.restaurants.get_menu(rest_id)
         self.assertEqual(len(result), 1)
         self.assertIn("Test Burger", result[0]["text"])
 
@@ -63,7 +65,7 @@ class TestAuthAndCatalog(unittest.TestCase):
         )
         cur.close()
 
-        result = self.db.restaurants.get_menu(rest_id)
+        result = self.services.restaurants.get_menu(rest_id)
         self.assertEqual(result, [])
 
     def test_get_full_menu_includes_unavailable_items_with_flag(self):
@@ -77,7 +79,7 @@ class TestAuthAndCatalog(unittest.TestCase):
         food_id = cur.lastrowid
         cur.close()
 
-        result = self.db.restaurants.get_full_menu(rest_id)
+        result = self.services.restaurants.get_full_menu(rest_id)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["id"], food_id)
         self.assertFalse(result[0]["available"])
@@ -93,13 +95,13 @@ class TestAuthAndCatalog(unittest.TestCase):
         food_id = cur.lastrowid
         cur.close()
 
-        self.assertEqual(len(self.db.restaurants.get_menu(rest_id)), 1)
+        self.assertEqual(len(self.services.restaurants.get_menu(rest_id)), 1)
 
-        self.assertTrue(self.db.restaurants.toggle_food_availability(food_id, rest_id))
-        self.assertEqual(self.db.restaurants.get_menu(rest_id), [])
+        self.assertTrue(self.services.restaurants.toggle_food_availability(food_id, rest_id))
+        self.assertEqual(self.services.restaurants.get_menu(rest_id), [])
 
-        self.assertTrue(self.db.restaurants.toggle_food_availability(food_id, rest_id))
-        self.assertEqual(len(self.db.restaurants.get_menu(rest_id)), 1)
+        self.assertTrue(self.services.restaurants.toggle_food_availability(food_id, rest_id))
+        self.assertEqual(len(self.services.restaurants.get_menu(rest_id)), 1)
 
 if __name__ == '__main__':
     unittest.main()

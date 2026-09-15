@@ -60,10 +60,10 @@ class CartScreen(Screen):
         self.selected_tip_option = "NONE"
         self.ids.custom_tip_input.text = ""
 
-        balance = app.db.wallet.get_balance(app.user_id)
+        balance = app.services.wallet.get_balance(app.user_id)
         self.ids.balance_btn.text = f"Balance: {balance:.2f}€"
 
-        app.cached_addresses = app.db.addresses.get_addresses(app.user_id)
+        app.cached_addresses = app.services.addresses.list_addresses(app.user_id)
         address_strings = [item["address"] for item in app.cached_addresses]
         self.ids.address_spinner.values = address_strings
 
@@ -72,7 +72,7 @@ class CartScreen(Screen):
         else:
             self.ids.address_spinner.text = "Select Address"
 
-        data = app.db.orders.get_cart_items(cart)
+        data = app.services.orders.get_cart_items(cart)
         total_price = sum(float(item["price"]) for item in data)
 
         self.ids.rv.data = data
@@ -106,7 +106,7 @@ class CartScreen(Screen):
 
     def open_card_picker(self):
         app = App.get_running_app()
-        cards = app.db.cards.get_cards(app.user_id)
+        cards = app.services.cards.list_cards(app.user_id)
 
         def build(panel, close):
             panel.add_widget(Label(

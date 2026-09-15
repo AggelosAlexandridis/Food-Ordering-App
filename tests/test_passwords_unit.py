@@ -1,6 +1,6 @@
 import unittest
 
-from db.passwords import hash_password, is_hashed, verify_password
+from services.passwords import hash_password, is_hashed, verify_password
 
 
 class TestHashPassword(unittest.TestCase):

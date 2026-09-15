@@ -8,6 +8,12 @@ class Wallet:
             res = cur.fetchone()
         return float(res[0]) if res else None
 
+    def get_wallet_id(self, user_id):
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT id FROM wallets WHERE user_id = %s LIMIT 1", (user_id,))
+            row = cur.fetchone()
+        return row[0] if row else None
+
     def update_balance(self, user_id, new_balance):
         try:
             with self.conn.cursor() as cur:

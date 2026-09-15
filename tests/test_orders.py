@@ -2,12 +2,14 @@ import unittest
 
 import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
+from services import ServiceManager
 
 class TestOrderLogic(unittest.TestCase):
     def setUp(self):
         self.db = DBManager()
+        self.services = ServiceManager(self.db)
         cur = self.db.conn.cursor()
-        
+
         cur.execute("DELETE FROM orders WHERE user_id IN (SELECT id FROM users WHERE username = 'order_user')")
         cur.execute("DELETE FROM users WHERE username = 'order_user'")
         self.db.conn.commit()
@@ -33,30 +35,39 @@ class TestOrderLogic(unittest.TestCase):
         result = self.db.orders.get_user_orders(self.user_id)
         self.assertEqual(result, [])
 
-    def test_submit_order_fails_without_wallet(self):
-        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CARD")
+    def test_checkout_fails_without_wallet(self):
+        success, error = self.services.orders.checkout(
+            self.user_id, None, self.address_id, "CARD", 25.50, 0, None
+        )
         self.assertFalse(success)
+        self.assertIn("Wallet not found", error)
 
-    def test_submit_order_success(self):
+    def test_checkout_success(self):
         cur = self.db.conn.cursor()
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (self.user_id, 100.0))
         cur.close()
 
-        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CARD")
+        success, error = self.services.orders.checkout(
+            self.user_id, None, self.address_id, "CARD", 25.50, 0, None
+        )
         self.assertTrue(success)
+        self.assertIsNone(error)
 
-    def test_submit_order_cash_succeeds_without_wallet(self):
-        success = self.db.orders.submit_order(self.user_id, self.address_id, 25.50, "CASH")
+    def test_checkout_cash_succeeds_without_wallet(self):
+        success, error = self.services.orders.checkout(
+            self.user_id, None, self.address_id, "CASH", 25.50, 0, None
+        )
         self.assertTrue(success)
+        self.assertIsNone(error)
 
-    def test_submit_and_get_user_orders(self):
+    def test_checkout_and_list_user_orders(self):
         cur = self.db.conn.cursor()
         cur.execute("INSERT INTO wallets (user_id, balance) VALUES (%s, %s)", (self.user_id, 100.0))
         cur.close()
 
-        self.db.orders.submit_order(self.user_id, self.address_id, 42.00, "CARD")
+        self.services.orders.checkout(self.user_id, None, self.address_id, "CARD", 42.00, 0, None)
 
-        orders = self.db.orders.get_user_orders(self.user_id)
+        orders = self.services.orders.list_user_orders(self.user_id)
         self.assertEqual(len(orders), 1)
         self.assertIn("Total: 42.00€", orders[0]["text"])
         self.assertIn("Status: PENDING", orders[0]["text"])

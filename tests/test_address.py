@@ -2,10 +2,12 @@ import unittest
 
 import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
 from db import DBManager
+from services import ServiceManager
 
 class TestAddressLogic(unittest.TestCase):
     def setUp(self):
         self.db = DBManager()
+        self.services = ServiceManager(self.db)
         cur = self.db.conn.cursor()
 
         # orders must go before users (an order can reference one of this
@@ -29,34 +31,35 @@ class TestAddressLogic(unittest.TestCase):
         self.db.close()
 
     def test_get_addresses_empty(self):
-        result = self.db.addresses.get_addresses(self.user_id)
+        result = self.services.addresses.list_addresses(self.user_id)
         self.assertEqual(result, [])
 
     def test_add_address_success(self):
-        success = self.db.addresses.add_address(self.user_id, "123 Test Street")
+        success, error = self.services.addresses.add_address(self.user_id, "123 Test Street")
         self.assertTrue(success)
+        self.assertIsNone(error)
 
     def test_add_and_retrieve_address(self):
-        self.db.addresses.add_address(self.user_id, "456 Mock Blvd")
+        self.services.addresses.add_address(self.user_id, "456 Mock Blvd")
 
-        result = self.db.addresses.get_addresses(self.user_id)
+        result = self.services.addresses.list_addresses(self.user_id)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["address"], "456 Mock Blvd")
         self.assertIn("id", result[0])
 
     def test_delete_address_success(self):
-        self.db.addresses.add_address(self.user_id, "789 Deletable Ln")
-        address_id = self.db.addresses.get_addresses(self.user_id)[0]["id"]
+        self.services.addresses.add_address(self.user_id, "789 Deletable Ln")
+        address_id = self.services.addresses.list_addresses(self.user_id)[0]["id"]
 
-        success, error = self.db.addresses.delete_address(self.user_id, address_id)
+        success, error = self.services.addresses.delete_address(self.user_id, address_id)
 
         self.assertTrue(success)
         self.assertIsNone(error)
-        self.assertEqual(self.db.addresses.get_addresses(self.user_id), [])
+        self.assertEqual(self.services.addresses.list_addresses(self.user_id), [])
 
     def test_delete_address_referenced_by_order_fails_with_friendly_message(self):
-        self.db.addresses.add_address(self.user_id, "1 Order Blocked Way")
-        address_id = self.db.addresses.get_addresses(self.user_id)[0]["id"]
+        self.services.addresses.add_address(self.user_id, "1 Order Blocked Way")
+        address_id = self.services.addresses.list_addresses(self.user_id)[0]["id"]
 
         cur = self.db.conn.cursor()
         cur.execute(
@@ -66,12 +69,12 @@ class TestAddressLogic(unittest.TestCase):
         )
         cur.close()
 
-        success, error = self.db.addresses.delete_address(self.user_id, address_id)
+        success, error = self.services.addresses.delete_address(self.user_id, address_id)
 
         self.assertFalse(success)
         self.assertIn("used by an existing order", error)
         # the address must still be there since the delete was rejected
-        self.assertEqual(len(self.db.addresses.get_addresses(self.user_id)), 1)
+        self.assertEqual(len(self.services.addresses.list_addresses(self.user_id)), 1)
 
 if __name__ == '__main__':
     unittest.main()

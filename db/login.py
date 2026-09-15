@@ -1,41 +1,31 @@
-from .passwords import hash_password, verify_password
-
-
 class Login:
     def __init__(self, conn):
         self.conn = conn
 
-    def check_login(self, username, password):
+    def find_credentials(self, username_or_email):
         with self.conn.cursor() as cur:
             cur.execute(
                 "SELECT id, role, password FROM users WHERE username=%s OR email=%s",
-                (username, username),
+                (username_or_email, username_or_email),
             )
-            res = cur.fetchone()
+            return cur.fetchone()
 
-        if not res:
-            return None
-
-        user_id, role, stored_password = res
-        if not verify_password(password, stored_password):
-            return None
-
-        return [user_id, role]
-
-    def register(self, username, password, email, phone_number, role="CUSTOMER", restaurant_id=None):
+    def username_exists(self, username):
         with self.conn.cursor() as cur:
             cur.execute("SELECT 1 FROM users WHERE username = %s", (username,))
-            if cur.fetchone():
-                return None, "That username is already taken."
+            return cur.fetchone() is not None
 
+    def email_exists(self, email):
+        with self.conn.cursor() as cur:
             cur.execute("SELECT 1 FROM users WHERE email = %s", (email,))
-            if cur.fetchone():
-                return None, "That email is already registered."
+            return cur.fetchone() is not None
 
+    def phone_exists(self, phone_number):
+        with self.conn.cursor() as cur:
             cur.execute("SELECT 1 FROM users WHERE phone_number = %s", (phone_number,))
-            if cur.fetchone():
-                return None, "That phone number is already registered."
+            return cur.fetchone() is not None
 
+    def create_user(self, username, hashed_password, email, phone_number, role="CUSTOMER", restaurant_id=None):
         try:
             with self.conn.cursor() as cur:
                 cur.execute(
@@ -43,15 +33,15 @@ class Login:
                     INSERT INTO users (username, password, email, phone_number, role, restaurant_id)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (username, hash_password(password), email, phone_number, role, restaurant_id),
+                    (username, hashed_password, email, phone_number, role, restaurant_id),
                 )
                 user_id = cur.lastrowid
                 cur.execute(
                     "INSERT INTO wallets (user_id, balance) VALUES (%s, 0)", (user_id,)
                 )
             self.conn.commit()
-            return user_id, None
+            return user_id
         except Exception as e:
             print(f"Error registering user: {e}")
             self.conn.rollback()
-            return None, "Error creating account. Please try again."
+            return None

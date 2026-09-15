@@ -36,6 +36,16 @@ class TestWalletUnit(unittest.TestCase):
         self.assertIn("WHERE user_id=%s", query)
         self.assertEqual(params, (3,))
 
+    def test_get_wallet_id_returns_id(self):
+        self.cursor.fetchone.return_value = (55,)
+
+        self.assertEqual(self.wallet.get_wallet_id(1), 55)
+
+    def test_get_wallet_id_returns_none_when_missing(self):
+        self.cursor.fetchone.return_value = None
+
+        self.assertIsNone(self.wallet.get_wallet_id(1))
+
     def test_update_balance_commits_and_returns_true_on_success(self):
         result = self.wallet.update_balance(1, 100.0)
 

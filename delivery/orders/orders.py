@@ -24,11 +24,11 @@ class DeliveryOrdersScreen(Screen):
 
         if self.restaurant_id:
             restaurant_ids = [self.restaurant_id]
-            restaurant = app.db.restaurants.get_restaurant(self.restaurant_id)
+            restaurant = app.services.restaurants.get_restaurant(self.restaurant_id)
             self.ids.title_label.text = restaurant["name"] if restaurant else "Ready Orders"
         else:
-            restaurants = app.db.delivery.get_restaurants_for_delivery(app.user_id)
+            restaurants = app.services.delivery.list_restaurants_for_delivery(app.user_id)
             restaurant_ids = [r["id"] for r in restaurants]
             self.ids.title_label.text = "All Ready Orders"
 
-        self.ids.rv.data = app.db.orders.get_ready_orders_for_restaurants(restaurant_ids)
+        self.ids.rv.data = app.services.orders.list_ready_orders(restaurant_ids)

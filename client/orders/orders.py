@@ -8,4 +8,4 @@ class OrdersScreen(Screen):
 
     def refresh_orders(self):
         app = App.get_running_app()
-        self.ids.rv.data = app.db.orders.get_user_orders(app.user_id)
+        self.ids.rv.data = app.services.orders.list_user_orders(app.user_id)

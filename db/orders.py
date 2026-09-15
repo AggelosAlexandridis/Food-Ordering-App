@@ -1,55 +1,21 @@
 class Orders:
-    DELIVERY_FLAT_FEE = 2.50
-
     def __init__(self, conn):
         self.conn = conn
 
-    def get_cart_items(self, cart):
-        if not cart:
+    def get_food_prices(self, ids):
+        if not ids:
             return []
-
-        ids = [item["id"] for item in cart]
         placeholders = ",".join(["%s"] * len(ids))
-
         with self.conn.cursor() as cur:
             cur.execute(
                 f"SELECT id, name, price FROM food WHERE id IN ({placeholders})", ids
             )
-            res = cur.fetchall()
+            return cur.fetchall()
 
-        quantity_map = {}
-        for item in cart:
-            quantity_map[item["id"]] = quantity_map.get(item["id"], 0) + item["quantity"]
-
-        result = []
-        for food_id, name, price in res:
-            qty = quantity_map.get(food_id, 0)
-            line_total = float(f"{float(price) * qty:.1f}")
-            result.append({
-                "id": food_id,
-                "text": f"{name} x{qty}: {line_total}€",
-                "price": line_total,
-            })
-        return result
-
-    def submit_order(self, user_id, address_id, price, payment_method, notes=None,
-                      restaurant_id=None, tip=0):
+    def insert_order(self, user_id, address_id, price, payment_method, notes=None,
+                      restaurant_id=None, tip=0, wallet_id=None):
         try:
             with self.conn.cursor() as cur:
-                wallet_id = None
-
-                if payment_method == "CARD":
-                    cur.execute(
-                        "SELECT id FROM wallets WHERE user_id = %s LIMIT 1", (user_id,)
-                    )
-                    wallet_row = cur.fetchone()
-
-                    if not wallet_row:
-                        print(f"Error: No wallet found for user_id {user_id}")
-                        return False
-
-                    wallet_id = wallet_row[0]
-
                 cur.execute(
                     """
                     INSERT INTO orders
@@ -76,17 +42,7 @@ class Orders:
                 """,
                 (user_id,),
             )
-            res = cur.fetchall()
-
-        result = []
-        for order_id, price, tip, status, created_at in res:
-            total = float(price) + float(tip)
-            text = f"Order #{order_id} | Status: {status}\nTotal: {total:.2f}€"
-            if tip:
-                text += f" (incl. {float(tip):.2f}€ tip)"
-            text += f" | Date: {created_at.strftime('%Y-%m-%d %H:%M')}"
-            result.append({"id": order_id, "status": status, "text": text})
-        return result
+            return cur.fetchall()
 
     def cancel_order_by_customer(self, order_id, user_id):
         try:
@@ -120,37 +76,25 @@ class Orders:
                 """,
                 (restaurant_id,),
             )
-            res = cur.fetchall()
-
-        result = []
-        for order_id, price, tip, status, created_at, notes in res:
-            text = f"Order #{order_id} · {status}\n{float(price):.2f}€"
-            if tip:
-                text += f" + {float(tip):.2f}€ tip"
-            text += f" · {created_at.strftime('%Y-%m-%d %H:%M')}"
-            if notes:
-                preview = notes if len(notes) <= 50 else notes[:47] + "..."
-                text += f"\nNote: {preview}"
-            result.append({"id": order_id, "status": status, "text": text})
-        return result
+            return cur.fetchall()
 
     def confirm_order(self, order_id, restaurant_id, chef_id):
         return self._chef_transition(
-            order_id, restaurant_id,
+            order_id,
             "UPDATE orders SET status = 'CONFIRMED', chef_id = %s WHERE id = %s AND restaurant_id = %s AND status = 'PENDING'",
             (chef_id, order_id, restaurant_id),
         )
 
     def mark_order_ready(self, order_id, restaurant_id, chef_id):
         return self._chef_transition(
-            order_id, restaurant_id,
+            order_id,
             "UPDATE orders SET status = 'READY' WHERE id = %s AND restaurant_id = %s AND status = 'CONFIRMED' AND chef_id = %s",
             (order_id, restaurant_id, chef_id),
         )
 
     def cancel_order_by_chef(self, order_id, restaurant_id, chef_id):
         return self._chef_transition(
-            order_id, restaurant_id,
+            order_id,
             """
             UPDATE orders SET status = 'CANCELLED', chef_id = %s
             WHERE id = %s AND restaurant_id = %s AND status IN ('PENDING', 'CONFIRMED')
@@ -158,7 +102,7 @@ class Orders:
             (chef_id, order_id, restaurant_id),
         )
 
-    def _chef_transition(self, order_id, restaurant_id, query, params):
+    def _chef_transition(self, order_id, query, params):
         try:
             with self.conn.cursor() as cur:
                 cur.execute(query, params)
@@ -192,16 +136,7 @@ class Orders:
                 """,
                 restaurant_ids,
             )
-            res = cur.fetchall()
-
-        return [
-            {
-                "id": row[0],
-                "restaurant_id": row[2],
-                "text": f"Order #{row[0]} · {row[3]} · {float(row[1]):.2f}€",
-            }
-            for row in res
-        ]
+            return cur.fetchall()
 
     def claim_order_for_delivery(self, order_id, delivery_user_id):
         """Atomically claim a READY order. False if someone else got there first."""
@@ -238,12 +173,7 @@ class Orders:
                 """,
                 (delivery_user_id,),
             )
-            res = cur.fetchall()
-
-        return [
-            {"id": row[0], "text": f"Order #{row[0]} · {row[2]} · {float(row[1]):.2f}€"}
-            for row in res
-        ]
+            return cur.fetchall()
 
     def mark_order_delivered(self, order_id, delivery_user_id):
         return self._delivery_transition(order_id, delivery_user_id, "DELIVERED")
@@ -269,7 +199,9 @@ class Orders:
             self.conn.rollback()
             return False
 
-    def get_delivery_income(self, delivery_user_id):
+    def get_delivery_income_raw(self, delivery_user_id):
+        """(delivered_count, tip_total) — the flat delivery fee and totals
+        are a business rule, computed by the service layer."""
         with self.conn.cursor() as cur:
             cur.execute(
                 """
@@ -280,13 +212,4 @@ class Orders:
                 (delivery_user_id,),
             )
             count, tip_total = cur.fetchone()
-
-        count = count or 0
-        tip_total = float(tip_total or 0)
-        flat_fees = count * self.DELIVERY_FLAT_FEE
-        return {
-            "deliveries": count,
-            "flat_fees": flat_fees,
-            "tips": tip_total,
-            "total": flat_fees + tip_total,
-        }
+        return count or 0, float(tip_total or 0)
