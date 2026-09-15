@@ -1,7 +1,5 @@
 import random
 
-# Excludes 0/O and 1/I/L, which are easy to misread when a code is copied
-# by eye between two windows (e.g. a chef's screen and a delivery person's).
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 

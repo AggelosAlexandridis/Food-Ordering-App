@@ -5,7 +5,6 @@ from db.restaurants import Restaurants
 
 
 class TestRestaurantsUnit(unittest.TestCase):
-    """Pure unit tests: the DB connection/cursor are mocked, no real DB is touched."""
 
     def setUp(self):
         self.conn = MagicMock()

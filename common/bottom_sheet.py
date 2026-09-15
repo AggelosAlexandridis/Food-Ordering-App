@@ -6,11 +6,6 @@ from kivy.uix.button import Button
 
 
 def open_bottom_sheet(screen, build_content, height_fraction=0.8):
-    """Slide a white, rounded-top panel up from the bottom of `screen`.
-
-    `build_content(panel, close)` populates the panel; call `close()` to
-    dismiss it (also triggered by tapping the dimmed backdrop).
-    """
     backdrop = Button(background_normal="", background_color=(0, 0, 0, 0.55))
 
     panel_height = Window.height * height_fraction

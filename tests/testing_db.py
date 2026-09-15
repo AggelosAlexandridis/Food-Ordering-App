@@ -1,13 +1,3 @@
-"""
-Ghost test database bootstrap.
-
-Import this module (before creating a DBManager) in any test that needs a
-real DB connection. On first import per test run it creates an isolated
-database from main.sql and points DBManager at it via the DATABASE env var,
-so tests never read/write the real database configured in .env. Later
-imports are no-ops (module-level code only runs once, Python caches it).
-"""
-
 import os
 import re
 from pathlib import Path
@@ -33,9 +23,6 @@ def _connect(database=None):
 
 
 def _strip_comments_and_db_selection(sql_text):
-    # main.sql hardcodes `CREATE DATABASE ofd; use ofd;` and mixes '#'/'--'
-    # comments (some containing literal ';', which would confuse the
-    # statement splitter below) — drop both before splitting.
     lines = []
     for line in sql_text.splitlines():
         stripped = line.strip()
@@ -53,8 +40,6 @@ def _strip_comments_and_db_selection(sql_text):
 
 
 def _split_sql_statements(sql_text):
-    """Splits a .sql script into individual statements, honoring `delimiter`
-    directives (used by main.sql to define triggers containing ';')."""
     delimiter = ";"
     buffer = ""
     statements = []
@@ -71,8 +56,6 @@ def _split_sql_statements(sql_text):
         buffer += line + "\n"
         stripped = buffer.rstrip()
         if delimiter != ";":
-            # tolerate a stray ';' right after a custom delimiter (main.sql
-            # has `end $$;`, where the trailing ';' is not itself a statement)
             stripped = stripped.rstrip(";").rstrip()
         if stripped.endswith(delimiter):
             statement = stripped[: -len(delimiter)].strip()

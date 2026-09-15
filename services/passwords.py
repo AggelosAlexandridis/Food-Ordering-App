@@ -14,11 +14,6 @@ def hash_password(plain_password):
 
 
 def verify_password(plain_password, stored_password):
-    """True if plain_password matches stored_password.
-
-    Accepts a legacy plaintext stored_password (no '$' segments) so old,
-    not-yet-migrated rows still work: falls back to a direct compare.
-    """
     parts = stored_password.split("$") if stored_password else []
     if len(parts) != 4 or parts[0] != ALGORITHM:
         return hmac.compare_digest(plain_password, stored_password or "")

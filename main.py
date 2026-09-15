@@ -14,22 +14,22 @@ from services import ServiceManager
 
 # Unused directly, but importing these modules defines their Screen
 # subclasses so Kivy can resolve them when common/root.kv is built.
-from common.login.login import LoginScreen  # noqa: F401
-from common.register.register import RegisterScreen  # noqa: F401
-from client.dashboard.dashboard import DashboardScreen  # noqa: F401
-from client.restaurant.restaurant import RestaurantScreen  # noqa: F401
-from client.cart.cart import CartScreen  # noqa: F401
-from client.address.address import AddressScreen  # noqa: F401
-from client.orders.orders import OrdersScreen  # noqa: F401
-from client.wallet.wallet import WalletScreen  # noqa: F401
-from client.cards.cards import CardsScreen  # noqa: F401
-from client.profile.profile import ProfileScreen  # noqa: F401
-from chef.dashboard.dashboard import ChefDashboardScreen  # noqa: F401
-from chef.menu.menu import ChefMenuScreen  # noqa: F401
-from delivery.dashboard.dashboard import DeliveryDashboardScreen  # noqa: F401
-from delivery.orders.orders import DeliveryOrdersScreen  # noqa: F401
-from delivery.active.active import DeliveryActiveScreen  # noqa: F401
-from delivery.profile.profile import DeliveryProfileScreen  # noqa: F401
+from common.login.login import LoginScreen
+from common.register.register import RegisterScreen
+from client.dashboard.dashboard import DashboardScreen
+from client.restaurant.restaurant import RestaurantScreen
+from client.cart.cart import CartScreen
+from client.address.address import AddressScreen
+from client.orders.orders import OrdersScreen
+from client.wallet.wallet import WalletScreen
+from client.cards.cards import CardsScreen
+from client.profile.profile import ProfileScreen
+from chef.dashboard.dashboard import ChefDashboardScreen
+from chef.menu.menu import ChefMenuScreen
+from delivery.dashboard.dashboard import DeliveryDashboardScreen
+from delivery.orders.orders import DeliveryOrdersScreen
+from delivery.active.active import DeliveryActiveScreen
+from delivery.profile.profile import DeliveryProfileScreen
 
 
 class MyApp(App):

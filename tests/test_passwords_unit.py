@@ -28,7 +28,6 @@ class TestVerifyPassword(unittest.TestCase):
         self.assertFalse(verify_password("wrong-password", hashed))
 
     def test_legacy_plaintext_password_still_verifies(self):
-        # rows created before the hashing migration store the raw password
         self.assertTrue(verify_password("1234", "1234"))
 
     def test_legacy_plaintext_wrong_password_fails(self):

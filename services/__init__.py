@@ -9,13 +9,6 @@ from .wallet import Wallet
 
 
 class ServiceManager:
-    """Business-logic tier: validation, calculations and orchestration.
-
-    Sits between the Controller (Screens/MyApp) and the Model (DBManager's
-    repositories + the relational schema). Screens/Controller should never
-    call `app.db.*` directly — always go through `app.services.*`.
-    """
-
     def __init__(self, db):
         self.auth = Auth(db)
         self.addresses = Addresses(db)

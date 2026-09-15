@@ -26,7 +26,6 @@ class Restaurants:
         ]
 
     def find_unavailable_cart_items(self, cart):
-        """[{'id', 'name'}, ...] for cart items that are no longer available."""
         ids = [item["id"] for item in cart]
         items = self.db.restaurants.get_items_by_ids(ids)
         return [

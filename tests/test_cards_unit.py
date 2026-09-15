@@ -6,7 +6,6 @@ from db.cards import Cards
 
 
 class TestCardsUnit(unittest.TestCase):
-    """Pure unit tests: the DB connection/cursor are mocked, no real DB is touched."""
 
     def setUp(self):
         self.conn = MagicMock()

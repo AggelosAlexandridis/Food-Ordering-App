@@ -5,8 +5,6 @@ class Orders:
     def __init__(self, db):
         self.db = db
 
-    # --- Cart / checkout -------------------------------------------------
-
     def get_cart_items(self, cart):
         if not cart:
             return []
@@ -74,8 +72,6 @@ class Orders:
     def cancel_order(self, order_id, user_id):
         return self.db.orders.cancel_order_by_customer(order_id, user_id)
 
-    # --- Chef --------------------------------------------------------
-
     def list_restaurant_orders(self, restaurant_id):
         rows = self.db.orders.get_restaurant_orders(restaurant_id)
 
@@ -99,8 +95,6 @@ class Orders:
 
     def cancel_order_by_chef(self, order_id, restaurant_id, chef_id):
         return self.db.orders.cancel_order_by_chef(order_id, restaurant_id, chef_id)
-
-    # --- Delivery -------------------------------------------------------
 
     def list_ready_orders(self, restaurant_ids):
         rows = self.db.orders.get_ready_orders_for_restaurants(restaurant_ids)

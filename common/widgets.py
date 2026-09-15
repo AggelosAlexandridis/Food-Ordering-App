@@ -38,5 +38,4 @@ class ProfileIconBtn(Button):
 
 
 class ThemedSpinnerOption(Button):
-    """Row widget for a themed Spinner's dropdown list (set via option_cls)."""
     pass

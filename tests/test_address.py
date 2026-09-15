@@ -1,6 +1,6 @@
 import unittest
 
-import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
+import testing_db
 from db import DBManager
 from services import ServiceManager
 
@@ -10,8 +10,6 @@ class TestAddressLogic(unittest.TestCase):
         self.services = ServiceManager(self.db)
         cur = self.db.conn.cursor()
 
-        # orders must go before users (an order can reference one of this
-        # user's addresses, and that FK isn't cascading) - see tearDown too
         cur.execute("DELETE FROM orders WHERE user_id IN (SELECT id FROM users WHERE username = 'address_user')")
         cur.execute("DELETE FROM users WHERE username = 'address_user'")
         self.db.conn.commit()
@@ -73,7 +71,6 @@ class TestAddressLogic(unittest.TestCase):
 
         self.assertFalse(success)
         self.assertIn("used by an existing order", error)
-        # the address must still be there since the delete was rejected
         self.assertEqual(len(self.services.addresses.list_addresses(self.user_id)), 1)
 
 if __name__ == '__main__':

@@ -7,7 +7,6 @@ from db.addresses import Addresses
 
 
 class TestAddressesUnit(unittest.TestCase):
-    """Pure unit tests: the DB connection/cursor are mocked, no real DB is touched."""
 
     def setUp(self):
         self.conn = MagicMock()

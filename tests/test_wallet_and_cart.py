@@ -1,6 +1,6 @@
 import unittest
 
-import testing_db  # noqa: F401  (import bootstraps the ghost test DB)
+import testing_db
 from db import DBManager
 from services import ServiceManager
 

@@ -27,9 +27,6 @@ class Addresses:
             return False
 
     def delete_address(self, user_id, address_id):
-        """True/False on success; lets mariadb.IntegrityError propagate so the
-        caller can decide what an FK conflict means (business knowledge, not
-        a data-access concern)."""
         try:
             with self.conn.cursor() as cur:
                 cur.execute(

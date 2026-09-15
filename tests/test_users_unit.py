@@ -5,7 +5,6 @@ from db.users import Users
 
 
 class TestUsersUnit(unittest.TestCase):
-    """Pure unit tests: the DB connection/cursor are mocked, no real DB is touched."""
 
     def setUp(self):
         self.conn = MagicMock()

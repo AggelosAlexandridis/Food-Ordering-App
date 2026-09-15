@@ -62,10 +62,7 @@ class Orders:
             self.conn.rollback()
             return False
 
-    # --- Chef ---------------------------------------------------------
-
     def get_restaurant_orders(self, restaurant_id):
-        """All orders for a restaurant, newest first — powers the chef dashboard."""
         with self.conn.cursor() as cur:
             cur.execute(
                 """
@@ -117,10 +114,7 @@ class Orders:
             self.conn.rollback()
             return False
 
-    # --- Delivery -------------------------------------------------------
-
     def get_ready_orders_for_restaurants(self, restaurant_ids):
-        """READY orders (not yet claimed) across the given restaurants."""
         if not restaurant_ids:
             return []
 
@@ -139,7 +133,6 @@ class Orders:
             return cur.fetchall()
 
     def claim_order_for_delivery(self, order_id, delivery_user_id):
-        """Atomically claim a READY order. False if someone else got there first."""
         try:
             with self.conn.cursor() as cur:
                 cur.execute(
@@ -161,7 +154,6 @@ class Orders:
             return False
 
     def get_delivery_orders(self, delivery_user_id):
-        """Orders this delivery person currently has out for delivery."""
         with self.conn.cursor() as cur:
             cur.execute(
                 """
@@ -200,8 +192,6 @@ class Orders:
             return False
 
     def get_delivery_income_raw(self, delivery_user_id):
-        """(delivered_count, tip_total) — the flat delivery fee and totals
-        are a business rule, computed by the service layer."""
         with self.conn.cursor() as cur:
             cur.execute(
                 """

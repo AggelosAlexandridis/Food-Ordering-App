@@ -137,10 +137,6 @@ create table if not exists orders (
             (payment_method = 'CARD' AND wallet_id IS NOT NULL)
             ),
 
-    -- chef_id / delivery_user_id are required once an order reaches the
-    -- status that implies they acted on it, but are never required to be
-    -- cleared afterward (e.g. cancelling an order you already confirmed or
-    -- claimed keeps you on the record).
     constraint chk_chef_required
         check (status not in ('CONFIRMED', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED') or chef_id is not null),
 
@@ -195,8 +191,6 @@ create table if not exists food(
 
 create index idx_food_restaurant_id on food(restaurant_id);
 
--- Many-to-many: a delivery person can serve many restaurants, and a
--- restaurant can have many delivery people.
 create table if not exists delivery_restaurants (
     id int primary key auto_increment,
     delivery_user_id int not null,
@@ -216,8 +210,6 @@ create table if not exists delivery_restaurants (
     constraint uq_delivery_restaurant unique (delivery_user_id, restaurant_id)
 );
 
--- Single-use codes a chef generates so a delivery person can link
--- themselves to that chef's restaurant.
 create table if not exists restaurant_invite_codes (
     id int primary key auto_increment,
     restaurant_id int not null,
@@ -240,17 +232,3 @@ create table if not exists restaurant_invite_codes (
                     foreign key (used_by)
                     references users(id)
 );
-
--- Migrations applied to existing databases (already reflected in the
--- CREATE TABLE statements above for fresh installs):
--- ALTER TABLE orders ADD COLUMN notes VARCHAR(500) NULL AFTER price;
--- ALTER TABLE users ADD COLUMN name VARCHAR(255) NULL AFTER username;
--- ALTER TABLE orders ADD COLUMN restaurant_id INT NULL AFTER user_id;
--- ALTER TABLE orders ADD COLUMN delivery_user_id INT NULL AFTER chef_id;
--- ALTER TABLE orders ADD COLUMN tip DECIMAL(10,2) DEFAULT 0 AFTER price;
--- ALTER TABLE orders MODIFY COLUMN status ENUM('PENDING','CONFIRMED','READY','OUT_FOR_DELIVERY','DELIVERED','CANCELLED') DEFAULT 'PENDING';
--- (chk_chef_required / chk_delivery_required recreated per the CREATE TABLE above)
--- The ADMIN role was removed: any existing ADMIN users were reassigned to
--- CUSTOMER (with a wallet created for them) before running:
--- ALTER TABLE users MODIFY COLUMN role ENUM('CUSTOMER','CHEF','DELIVERY') DEFAULT 'CUSTOMER';
--- ALTER TABLE food ADD COLUMN available TINYINT(1) NOT NULL DEFAULT 1 AFTER restaurant_id;
